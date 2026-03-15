@@ -2385,9 +2385,11 @@
                     tableId: tableId,
                     team1: t1Name,
                     team2: t2Name,
-                    fee: fee,
+                    fee1: fee,  // Team 1's individual fee
+                    fee2: fee,  // Team 2's individual fee
+                    fee: fee,   // Kept for backwards compatibility
                     timeLabel: timeLabel,
-                    division: leagueName // <--- SAVE DIVISION
+                    division: leagueName
                 });
 
                 saveData();
@@ -2508,8 +2510,15 @@
             document.getElementById('editMatchTeam2').value = match.team2;
             document.getElementById('editMatchTable').value = match.tableId;
 
+            // Populate per-team fees (fall back to shared fee for old data)
+            document.getElementById('editMatchFee1').value = (match.fee1 !== undefined ? match.fee1 : match.fee) || '';
+            document.getElementById('editMatchFee2').value = (match.fee2 !== undefined ? match.fee2 : match.fee) || '';
+
+            // Populate pre-paid status
+            document.getElementById('editMatchPaid1').checked = match.paid1 || false;
+            document.getElementById('editMatchPaid2').checked = match.paid2 || false;
+
             // Convert 7:00 PM back to 19:00 for the time input
-            // This is a simple helper to keep the time input happy
             document.getElementById('editMatchTime').value = "19:30";
 
             document.getElementById('btnUpdateMatch').onclick = () => saveMatchEdit(matchId);
@@ -2529,6 +2538,11 @@
             const newT2 = document.getElementById('editMatchTeam2').value;
             const newTable = document.getElementById('editMatchTable').value;
             const rawTime = document.getElementById('editMatchTime').value;
+            const newFee1 = parseFloat(document.getElementById('editMatchFee1').value);
+            const newFee2 = parseFloat(document.getElementById('editMatchFee2').value);
+
+            if (isNaN(newFee1) || newFee1 < 0) return alert('Please enter a valid fee for Team 1.');
+            if (isNaN(newFee2) || newFee2 < 0) return alert('Please enter a valid fee for Team 2.');
 
             // Convert time to label
             let timeLabel = match.timeLabel;
@@ -2545,6 +2559,11 @@
             match.team2 = newT2;
             match.tableId = newTable;
             match.timeLabel = timeLabel;
+            match.fee1 = newFee1;  // Team 1's fee
+            match.fee2 = newFee2;  // Team 2's fee
+            match.fee = newFee1;   // Keep legacy field in sync (use team1's fee as fallback)
+            match.paid1 = document.getElementById('editMatchPaid1').checked;  // Team 1 pre-paid
+            match.paid2 = document.getElementById('editMatchPaid2').checked;  // Team 2 pre-paid
 
             saveData();
             updateTableCard(oldTable);   // Clear old badge
@@ -2586,9 +2605,11 @@
                 alert(`moved ${busyName} to Float Table.`);
             }
 
-            // 2. ASSIGN LEAGUE PLAYERS
-            tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team1, startTime: new Date(), rateType: 'league', leagueFee: match.fee, isPaid: false });
-            tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team2, startTime: new Date(), rateType: 'league', leagueFee: match.fee, isPaid: false });
+            // 2. ASSIGN LEAGUE PLAYERS — each team uses their own fee and pre-paid status
+            const t1Fee = (match.fee1 !== undefined) ? match.fee1 : match.fee;
+            const t2Fee = (match.fee2 !== undefined) ? match.fee2 : match.fee;
+            tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team1, startTime: new Date(), rateType: 'league', leagueFee: t1Fee, isPaid: match.paid1 || false });
+            tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team2, startTime: new Date(), rateType: 'league', leagueFee: t2Fee, isPaid: match.paid2 || false });
 
             // 3. REMOVE FROM SCHEDULE
             scheduledMatches = scheduledMatches.filter(m => m.id !== id);
@@ -4139,9 +4160,23 @@
 
             <div class="text-muted mb-5">Team 1</div>
             <select id="editMatchTeam1" class="league-select" title="Edit Team 1"></select>
+            <div class="text-muted mb-5" style="margin-top:8px;">Team 1 League Fee ($)</div>
+            <input type="number" id="editMatchFee1" class="league-select" min="0" step="0.01"
+                placeholder="e.g. 25.00" title="Team 1 League Fee" style="margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                <input type="checkbox" id="editMatchPaid1" style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
+                <label for="editMatchPaid1" style="color:#00e676; font-size:0.8rem; font-weight:bold; cursor:pointer;">✓ Team 1 PRE-PAID</label>
+            </div>
 
             <div class="text-muted mb-5">Team 2</div>
             <select id="editMatchTeam2" class="league-select" title="Edit Team 2"></select>
+            <div class="text-muted mb-5" style="margin-top:8px;">Team 2 League Fee ($)</div>
+            <input type="number" id="editMatchFee2" class="league-select" min="0" step="0.01"
+                placeholder="e.g. 25.00" title="Team 2 League Fee" style="margin-bottom:6px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
+                <input type="checkbox" id="editMatchPaid2" style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
+                <label for="editMatchPaid2" style="color:#00e676; font-size:0.8rem; font-weight:bold; cursor:pointer;">✓ Team 2 PRE-PAID</label>
+            </div>
 
             <div class="text-muted mb-5">Table</div>
             <select id="editMatchTable" class="league-select" title="Edit Assigned Table"></select>
