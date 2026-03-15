@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reservations & Memberships — VIP Billiards</title>
+    <meta name="description"
+        content="Say goodbye to manual bookings. VIP Billiards has transitioned to our new custom-built digital reservation and loyalty platform.">
+    <link rel="icon" type="image/png" href="https://vipbilliardsinc.com/images/VIPLogo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Open+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="join.css">
+</head>
+
+<body>
+    <nav class="nav">
+        <a href="https://vipbilliardsinc.com" class="nav-logo">
+            <img src="https://vipbilliardsinc.com/images/VIPLogo.png" alt="VIP Billiards" class="nav-logo-img">
+            <span class="nav-logo-text">VIP BILLIARDS</span>
+        </a>
+        <div class="nav-right">
+            <a href="https://vipbilliardsinc.com" class="nav-link">Go back to VIP's Home Page</a>
+            <a href="login.html" class="btn-signin">Member Sign In</a>
+        </div>
+    </nav>
+
+    <section class="hero-showcase bg-light">
+        <div class="container">
+            <div class="showcase-grid">
+
+                <div class="showcase-content">
+                    <div class="hero-badge">The Digital Experience</div>
+                    <h1 class="hero-title">PLAY MORE<br><span class="gold-text">WAIT LESS.</span></h1>
+                    <p class="hero-tagline">
+                        Our custom-built digital platform transforms how you experience VIP Billiards. Select a feature
+                        below to see how it works.
+                    </p>
+
+                    <div class="showcase-tabs">
+                        <button class="showcase-tab active" data-target="slide-book">
+                            <div class="tab-icon">📅</div>
+                            <div class="tab-text">
+                                <h3>Frictionless Booking</h3>
+                                <p>Book up to 7 days out. Unlimited reservations. Imagine not only instantly reserving a table, but reserving the specific table you want to play on.</p>
+                            </div>
+                        </button>
+
+                        <button class="showcase-tab" data-target="slide-queue">
+                            <div class="tab-icon">🚀</div>
+                            <div class="tab-text">
+                                <h3>We Call it, "Same Day Arrivals"</h3>
+                                <p>Spontaneous night out? Tap "Heading There Now" to skip the physical waitlist.</p>
+                            </div>
+                        </button>
+
+                        <button class="showcase-tab" data-target="slide-rewards">
+                            <div class="tab-icon">⭐</div>
+                            <div class="tab-text">
+                                <h3>Loyalty Rewards - The More You Play, The More You Earn</h3>
+                                <p>Earn 5 points for every $1 spent. Hit 900 points, and your next hour is on us.</p>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="hero-actions mt-30">
+                        <a href="#tiers" class="btn-primary">Become a VIP Member</a>
+                    </div>
+                </div>
+
+                <div class="showcase-visuals">
+
+                    <div class="showcase-slide active" id="slide-book">
+                        <div class="mock-app-bg" style="height: 100%;">
+                            <div class="mock-app-content"
+                                style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+
+                                <div class="m-card" style="position: relative; overflow: hidden;">
+                                    <div
+                                        style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.04; transform: rotate(20deg);">
+                                        🎱</div>
+                                    <div
+                                        style="font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 3px; color: #fff; margin-bottom: 6px;">
+                                        READY TO PLAY?</div>
+                                    <div
+                                        style="font-size: 0.82rem; color: #9ca3af; line-height: 1.5; margin-bottom: 20px;">
+                                        As a VIP member, book up to 7 days in advance — anytime, unlimited.</div>
+                                    <button
+                                        style="display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, rgba(197, 179, 88, 0.25), rgba(197, 179, 88, 0.08)); border: 1px solid rgba(197, 179, 88, 0.5); border-radius: 12px; color: #e8d48a; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 3px; text-align: center; cursor: pointer;">🎱
+                                        RESERVE MY TABLE</button>
+                                </div>
+
+                                <div class="m-card mt-20">
+                                    <div class="card-label">Your Reservation</div>
+                                    <div class="res-row-segmented" style="margin-bottom:0;">
+                                        <div class="seg-datetime"><span class="seg-date">MAR 10</span><span
+                                                class="seg-time">11:05 AM</span></div>
+                                        <div class="seg-details">
+                                            <div class="seg-badge">👥 1 PPL</div>
+                                            <div class="seg-badge">🎱 1</div>
+                                        </div>
+                                        <div class="seg-action-block block-status status-arrived">ARRIVED</div>
+                                        <div class="seg-action-block block-table">TABLE 1</div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="showcase-slide" id="slide-queue">
+                        <div class="mock-app-bg" style="height: 100%;">
+                            <div class="mock-app-content"
+                                style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+                                <div class="m-card crowd-section">
+                                    <div class="crowd-header">
+                                        <div class="card-label">Live Crowd Meter</div>
+                                        <div class="crowd-count">6/17 Tables</div>
+                                    </div>
+                                    <div class="heat-scale">
+                                        <div class="tick active" style="background:#00ff9d;"></div>
+                                        <div class="tick active" style="background:#00ff9d;"></div>
+                                        <div class="tick active" style="background:#00ff9d;"></div>
+                                        <div class="tick"></div>
+                                        <div class="tick"></div>
+                                    </div>
+                                    <button class="btn-sameday mock-pulse" style="margin-top: 20px;">I'M HEADING THERE
+                                        NOW!</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="showcase-slide" id="slide-rewards">
+                        <div class="mock-app-bg" style="height: 100%;">
+                            <div class="mock-app-content"
+                                style="display: flex; flex-direction: column; justify-content: center; height: 100%;">
+
+                                <div class="m-card points-card">
+                                    <div class="card-label">VIP Points</div>
+                                    <div class="points-ring-wrap">
+                                        <div class="ring-container">
+                                            <svg class="ring-svg" viewBox="0 0 120 120">
+                                                <circle class="ring-track" cx="60" cy="60" r="50" />
+                                                <circle class="ring-fill pro mock-ring-fill" cx="60" cy="60" r="50"
+                                                    style="stroke-dashoffset: 0;" />
+                                            </svg>
+                                            <div class="ring-center">
+                                                <div class="ring-pts pro">1240</div>
+                                                <div class="ring-label">VIP PTS</div>
+                                            </div>
+                                        </div>
+                                        <div class="points-info">
+                                            <div class="points-headline">FREE HOUR READY!</div>
+                                            <div class="points-sub">You've earned a free hour. Ask staff to redeem.
+                                            </div>
+                                            <div class="progress-bar-wrap">
+                                                <div class="progress-bar-fill" style="width: 100%;"></div>
+                                            </div>
+                                            <div class="progress-label">1240 / 900 points to free hour</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="m-card mt-20">
+                                    <div class="card-label">Play History</div>
+                                    <div class="history-list">
+                                        <div class="history-item">
+                                            <div class="history-icon redeem">🎉</div>
+                                            <div class="history-info">
+                                                <div class="history-title">Table 6</div>
+                                                <div class="history-date">Mar 7, 2026</div>
+                                            </div>
+                                            <div class="text-right">
+                                                <div class="white-nowrap mb-4"><span class="history-pts redeem">-900
+                                                        pts</span> <span class="history-pts earn">+46 pts</span></div>
+                                                <div class="history-hrs">Table 6 · 2.0h · $9.25</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <section class="section showcase-section">
+        <div class="container feature-split">
+            <div class="feature-text-side">
+                <div class="section-eyebrow">Your Own Live Dashboard</div>
+                <h2 class="section-title left-align">SEE IT IN ACTION</h2>
+                <p class="text-muted">
+                    This is your personal command center. Every VIP member gets instant access to our custom-built web
+                    app. Go ahead and take a look around, the phone on the right is scrollable.
+                </p>
+                <div class="points-list mt-30">
+                    <div class="point-item">
+                        <div class="point-icon">⭐</div>
+                        <div>
+                            <h4>Real-Time Loyalty Tracking</h4>
+                            <p>Watch your points stack up live after every session. Know exactly how close you are to
+                                your
+                                next free hour.</p>
+                        </div>
+                    </div>
+                    <div class="point-item">
+                        <div class="point-icon">🔥</div>
+                        <div>
+                            <h4>Live Crowd Meter</h4>
+                            <p>Check the room's vibe before you leave the house. See exactly how many tables are active
+                                right now.</p>
+                        </div>
+                    </div>
+                    <div class="point-item">
+                        <div class="point-icon">🚀</div>
+                        <div>
+                            <h4>Walk-In Alert</h4>
+                            <p>Tap "I'm Heading There Now" to instantly notify the staff dashboard that you are en
+                                route.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mock-phone-wrapper">
+                <div class="mock-phone">
+                    <div class="phone-notch"></div>
+
+                    <div class="mock-app-bg">
+                        <div class="mock-app-header">
+                            <div class="header-brand">
+                                <div class="header-name">VIP MEMBERS</div>
+                            </div>
+                            <div class="mock-settings">⚙ ACCOUNT</div>
+                        </div>
+
+                        <div class="mock-app-content">
+
+                            <div class="m-card hero-card">
+                                <div class="member-greeting">Welcome back</div>
+                                <div class="member-name">VICTOR I PLAYER</div>
+                                <div class="tier-badge pro">
+                                    <div class="tier-dot"></div>VIP MEMBER
+                                </div>
+                                <div class="hero-stats">
+                                    <div class="hero-stat">
+                                        <div class="hero-stat-label">Lifetime Hours</div>
+                                        <div class="hero-stat-value gold">10.3h</div>
+                                    </div>
+                                    <div class="hero-stat">
+                                        <div class="hero-stat-label">Member Since</div>
+                                        <div class="hero-stat-value">Mar 2026</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="m-card points-card">
+                                <div class="card-label">VIP Points</div>
+                                <div class="points-ring-wrap">
+                                    <div class="ring-container">
+                                        <svg class="ring-svg" viewBox="0 0 120 120">
+                                            <circle class="ring-track" cx="60" cy="60" r="50" />
+                                            <circle class="ring-fill pro mock-ring-fill" cx="60" cy="60" r="50"
+                                                style="stroke-dashoffset: 0;" />
+                                        </svg>
+                                        <div class="ring-center">
+                                            <div class="ring-pts pro">1240</div>
+                                            <div class="ring-label">VIP PTS</div>
+                                        </div>
+                                    </div>
+                                    <div class="points-info">
+                                        <div class="points-headline">FREE HOUR READY!</div>
+                                        <div class="points-sub">You've earned a free hour. Ask staff to redeem.</div>
+                                        <div class="progress-bar-wrap">
+                                            <div class="progress-bar-fill" style="width: 100%;"></div>
+                                        </div>
+                                        <div class="progress-label">1240 / 900 points to free hour</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="m-card crowd-section">
+                                <div class="crowd-header">
+                                    <div class="card-label mb-0" style="border-bottom:none; padding-bottom:0;">Live
+                                        Crowd Meter
+                                    </div>
+                                    <div class="crowd-count">6/17 Tables</div>
+                                </div>
+                                <div class="heat-scale">
+                                    <div class="tick active"
+                                        style="background:#00ff9d; color:#00ff9d; box-shadow:0 0 8px currentColor;">
+                                    </div>
+                                    <div class="tick active"
+                                        style="background:#33ff8f; color:#33ff8f; box-shadow:0 0 8px currentColor;">
+                                    </div>
+                                    <div class="tick active"
+                                        style="background:#66ff81; color:#66ff81; box-shadow:0 0 8px currentColor;">
+                                    </div>
+                                    <div class="tick active"
+                                        style="background:#99ff73; color:#99ff73; box-shadow:0 0 8px currentColor;">
+                                    </div>
+                                    <div class="tick active"
+                                        style="background:#ccff65; color:#ccff65; box-shadow:0 0 8px currentColor;">
+                                    </div>
+                                    <div class="tick active"
+                                        style="background:#ffff57; color:#ffff57; box-shadow:0 0 8px currentColor;">
+                                    </div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                    <div class="tick"></div>
+                                </div>
+                                <div class="crowd-status-bar">
+                                    <span class="status-label-text">Vibe Check:</span>
+                                    <span class="status-message" style="color:#ffcc49;">SIX POCKETS, NO WAIT</span>
+                                </div>
+                            </div>
+
+                            <button class="btn-sameday mock-pulse" style="margin-bottom: 20px;">I'M HEADING THERE
+                                NOW!</button>
+
+                            <div class="m-card" style="position: relative; overflow: hidden;">
+                                <div
+                                    style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.04; transform: rotate(20deg);">
+                                    🎱</div>
+                                <div
+                                    style="font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 3px; color: #fff; margin-bottom: 6px;">
+                                    READY TO PLAY?</div>
+                                <div style="font-size: 0.82rem; color: #9ca3af; line-height: 1.5; margin-bottom: 20px;">
+                                    As a VIP
+                                    member, book up to 7 days in advance — anytime, unlimited.</div>
+                                <button
+                                    style="display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, rgba(197, 179, 88, 0.25), rgba(197, 179, 88, 0.08)); border: 1px solid rgba(197, 179, 88, 0.5); border-radius: 12px; color: #e8d48a; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 3px; text-align: center; cursor: pointer;">🎱
+                                    RESERVE MY TABLE</button>
+                                <div
+                                    style="text-align: center; font-size: 0.7rem; color: #6b7280; margin-top: 8px; letter-spacing: 0.5px;">
+                                    Up to 7 days out · Unlimited reservations</div>
+                            </div>
+
+                            <div class="m-card mt-20">
+                                <div class="card-label">Your Reservation</div>
+                                <div class="res-row-segmented" style="margin-bottom:0;">
+                                    <div class="seg-datetime"><span class="seg-date">MAR 10</span><span
+                                            class="seg-time">11:05
+                                            AM</span></div>
+                                    <div class="seg-details">
+                                        <div class="seg-badge">👥 1 PPL</div>
+                                        <div class="seg-badge">🎱 1</div>
+                                    </div>
+                                    <div class="seg-action-block block-status status-arrived">ARRIVED</div>
+                                    <div class="seg-action-block block-table">TABLE 1</div>
+                                </div>
+                            </div>
+
+                            <div class="m-card mt-20">
+                                <div class="card-label">Play History</div>
+                                <div class="history-list">
+                                    <div class="history-item">
+                                        <div class="history-icon redeem">🎉</div>
+                                        <div class="history-info">
+                                            <div class="history-title">Table 6</div>
+                                            <div class="history-date">Mar 7, 2026</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="white-nowrap mb-4"><span class="history-pts redeem">-900
+                                                    pts</span> <span class="history-pts earn">+46 pts</span></div>
+                                            <div class="history-hrs">Table 6 · 2.0h · $9.25</div>
+                                        </div>
+                                    </div>
+                                    <div class="history-item">
+                                        <div class="history-icon earn">🎱</div>
+                                        <div class="history-info">
+                                            <div class="history-title">Table 2</div>
+                                            <div class="history-date">Mar 6, 2026</div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="white-nowrap mb-4"><span class="history-pts earn">+65 pts</span>
+                                            </div>
+                                            <div class="history-hrs">Table 2 · 1.5h · $13.00</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="scroll-indicator">
+                            <span>↑</span> Scroll <span>↓</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <section class="section tiers bg-light" id="tiers">
+        <div class="container">
+            <div class="section-eyebrow">HOW DO YOU WANT TO PLAY?</div>
+            <h2 class="section-title">BECOME A VIP FOR <span class="gold-text">FREE</span></h2>
+
+            <div class="tier-grid" style="grid-template-columns: 1fr; max-width: 600px; margin: 0 auto;">
+
+                <div class="tier-card pro" style="transform: none;">
+                    <div class="tier-header">
+                        <h3 class="tier-name gold-text">VIP Member</h3>
+                        <div class="tier-price gold-text">$0<span class="period">/mo</span></div>
+                        <p class="tier-desc">The plan that pays for itself, without paying anything.</p>
+                    </div>
+                    <ul class="tier-features">
+                        <li class="feature-row"><span class="icon gold">★</span> <strong>Unlimited Reservations</strong>
+                            (7 days out)</li>
+                        <li class="feature-row"><span class="icon gold">★</span> <strong>Same Day Arrivals</strong> Let us know you are coming</li>
+                        <li class="feature-row"><span class="icon gold">★</span> <strong>Request Specific Tables</strong> Pick the exact table you want to play on</li>
+                        <li class="feature-row"><span class="icon gold">★</span> <strong>Earn 5 Points</strong> for every $1 spent</li>
+                        <li class="feature-row"><span class="icon gold">★</span> <strong>Free Table Time</strong> (Redeem your points)</li>
+                        <li class="feature-row"><span class="icon gold">★</span> <strong>Live Crowd Meter</strong> access</li>
+                        <li class="feature-row"><span class="icon gold">★</span> Full digital play history & receipts</li>
+                    </ul>
+                    <a href="login.html?signup=true" class="btn-tier-pro">Become a VIP</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="container text-center">
+            <div class="section-eyebrow">The Digital Experience</div>
+            <h2 class="section-title">EXCLUSIVE VIP FEATURES</h2>
+            <div class="mb-30" style="margin-top: -20px;">
+                <img src="images/vip-techy.png" alt="VIP Billiards Digital Platform" class="shadow-lg"
+                    style="width: 100%; max-width: 450px; height: auto; border-radius: var(--radius); border: 2px solid rgba(197, 179, 88, 0.2); margin: 0 auto 40px;">
+            </div>
+            <p class="text-muted mx-auto section-desc-max">
+                We've completely streamlined the VIP experience. Our new digital platform is designed to eliminate wait
+                times, so you
+                can maximize your action on our 17 perfectly maintained professional tables.
+            </p>
+            <div class="feature-split feature-gap">
+                <div class="tier-card card-left">
+                    <div class="feat-icon">📅</div>
+                    <h3 class="tier-name gold-text">Frictionless Booking</h3>
+                    <p class="text-muted mb-30">Unlock unlimited online reservations bookable up to 7 days in advance.
+                        Get
+                        access
+                        to your full digital play history and detailed receipts right in your app, removing the
+                        guesswork
+                        from your schedule (actual <b>screenshot</b> from the app).</p>
+
+                    <div class="mini-app-snippet mock-app-bg" style="padding:0; border:none; background:transparent;">
+                        <div class="m-card"
+                            style="position: relative; overflow: hidden; margin-bottom:0; text-align: left;">
+                            <div
+                                style="position: absolute; top: -20px; right: -20px; font-size: 5rem; opacity: 0.04; transform: rotate(20deg);">
+                                🎱</div>
+                            <div
+                                style="font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 3px; color: #fff; margin-bottom: 6px;">
+                                READY TO PLAY?</div>
+                            <div style="font-size: 0.82rem; color: #9ca3af; line-height: 1.5; margin-bottom: 20px;">As a
+                                VIP member,
+                                book up to 7 days in advance — anytime, unlimited.</div>
+
+                            <button
+                                style="display: block; width: 100%; padding: 16px; background: linear-gradient(135deg, rgba(197, 179, 88, 0.25), rgba(197, 179, 88, 0.08)); border: 1px solid rgba(197, 179, 88, 0.5); border-radius: 12px; color: #e8d48a; font-family: 'Bebas Neue', sans-serif; font-size: 1.2rem; letter-spacing: 3px; text-align: center; cursor: pointer;">
+                                🎱 RESERVE MY TABLE
+                            </button>
+                            <div
+                                style="text-align: center; font-size: 0.7rem; color: #6b7280; margin-top: 8px; letter-spacing: 0.5px;">
+                                Up to 7 days out · Unlimited reservations</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tier-card card-left">
+                    <div class="feat-icon">🚀</div>
+                    <h3 class="tier-name gold-text">"Heading There Now" Queue</h3>
+                    <p class="text-muted mb-30">Spontaneous night out? Tap the button on your app to trigger a Walk-In alert
+                        alert on our
+                        staff's dashboard. We'll prepare your table before you even walk through the doors (actual
+                        <b>screenshot</b> from the app).
+                    </p>
+
+                    <div class="mini-app-snippet mock-app-bg"
+                        style="padding:0; border:none; background:transparent; display: flex; flex-direction: column; gap: 15px;">
+
+                        <div class="m-card crowd-section" style="margin-bottom:0; text-align: left; padding: 20px;">
+                            <div class="crowd-header" style="margin-bottom: 16px;">
+                                <div class="card-label" style="margin-bottom:0; border:none; padding-bottom:0;">Live
+                                    Crowd Meter
+                                </div>
+                                <div class="crowd-count">6/17 Tables</div>
+                            </div>
+                            <div class="heat-scale">
+                                <div class="tick active"
+                                    style="background:#00ff9d; color:#00ff9d; box-shadow:0 0 8px currentColor;"></div>
+                                <div class="tick active"
+                                    style="background:#33ff8f; color:#33ff8f; box-shadow:0 0 8px currentColor;"></div>
+                                <div class="tick active"
+                                    style="background:#66ff81; color:#66ff81; box-shadow:0 0 8px currentColor;"></div>
+                                <div class="tick active"
+                                    style="background:#99ff73; color:#99ff73; box-shadow:0 0 8px currentColor;"></div>
+                                <div class="tick active"
+                                    style="background:#ccff65; color:#ccff65; box-shadow:0 0 8px currentColor;"></div>
+                                <div class="tick active"
+                                    style="background:#ffff57; color:#ffff57; box-shadow:0 0 8px currentColor;"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                                <div class="tick"></div>
+                            </div>
+                            <div class="crowd-status-bar">
+                                <span class="status-label-text">Vibe Check:</span>
+                                <span class="status-message" style="color:#ffcc49;">SIX POCKETS, NO WAIT</span>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center;">
+                            <div class="pref-label" style="margin-bottom: 8px;">Table Preference: <strong
+                                    style="color: var(--gold);">Table 1 (9' Diamond)</strong></div>
+                            <button class="btn-sameday mock-pulse" style="margin-bottom: 0;">I'M HEADING THERE
+                                NOW!</button>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+    </section>
+
+    <section class="facility-break">
+        <img src="images/customers1.png" alt="Friends having fun playing pool" class="facility-img">
+        <div class="facility-overlay"></div>
+        <div class="facility-content">
+            <h2 class="facility-title">17 PROFESSIONAL TABLES.</h2>
+            <p class="facility-sub">Always perfectly maintained. Always ready for your game.</p>
+        </div>
+    </section>
+
+    <section class="section how-it-works" id="how-it-works">
+        <div class="container">
+            <div class="section-eyebrow">Simple as Pool</div>
+            <h2 class="section-title">HOW VIP POINTS WORK</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">🎱</div>
+                    <div class="step-title">Earn As You Play</div>
+                    <div class="step-body">VIP members earn 5 points for every $1 spent on table time. The more you
+                        play, the more you earn.</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">⭐</div>
+                    <div class="step-title">Stack Points</div>
+                    <div class="step-body">Points accumulate in your member dashboard in real time. Watch your balance
+                        grow after every session.</div>
+                </div>
+                <div class="step-connector"></div>
+                <div class="step">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">🎉</div>
+                    <div class="step-title">Redeem Free Pool</div>
+                    <div class="step-body">Hit 900 points? That's a free hour of pool — a $9 value. Just tell the staff
+                        and they'll take care of it.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section bg-light">
+        <div class="container feature-split">
+            <div class="feature-image-side">
+                <img src="images/vip-customers3.png" alt="Tray of pool balls at VIP Billiards counter"
+                    class="rounded-image shadow-lg" style="aspect-ratio: 1/1; object-position: center bottom;">
+            </div>
+            <div class="feature-text-side">
+                <div class="section-eyebrow">The VIP Advantage</div>
+                <h2 class="section-title left-align">WE GIVE YOU FREE POOL FOR PLAYING MORE</h2>
+                <p class="netflix-quote">
+                    "Earn 5 points for every dollar spent on table time. It's that simple."
+                </p>
+                <div class="points-list">
+                    <p class="text-muted">Our loyalty engine is built to reward our most dedicated players. By earning 5
+                        points for every dollar spent, a VIP membership pays for itself after just a few visits.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section faq" id="faq">
+        <div class="container container-narrow">
+            <div class="section-eyebrow">Questions</div>
+            <h2 class="section-title">FAQ</h2>
+
+            <div class="faq-list">
+                <div class="faq-item">
+                    <button class="faq-question">How do I sign up?</button>
+                    <div class="faq-answer">Just click "Join Free" and sign in with your Google account. That's it — no
+                        forms, no credit card, no waiting. Your member dashboard is ready instantly.</div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">How do VIP Points get added to my account?</button>
+                    <div class="faq-answer">Automatically. When your session ends and you pay, our system logs your
+                        revenue ($1 = 5 Points) and credits your points in real time. You'll see them in your dashboard
+                        the next time you
+                        open it.</div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">What counts toward points — do senior or day specials count?</button>
+                    <div class="faq-answer">Points are based on total revenue spent on table time ($1 = 5 Points). This
+                        includes senior specials, day specials, and night specials! For example, a $10 senior special
+                        earns 50 points, while a $30 night special earns 150 points. Every dollar you spend on pool
+                        brings you closer to your free hour.</div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">How do I redeem a free hour?</button>
+                    <div class="faq-answer">When your dashboard shows 900 points, just tell the staff at the start of
+                        your session. They'll apply the free hour (a $9 value) and your points will be deducted. No
+                        printouts, no
+                        codes needed.</div>
+                </div>
+                <div class="faq-item">
+                    <button class="faq-question">Do points expire?</button>
+                    <div class="faq-answer">Not currently. Play at your own pace — your points will be waiting for you.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container text-center">
+            <div class="footer-logo gold-text">VIP BILLIARDS</div>
+            <div class="footer-links">
+                <a href="https://vipbilliardsinc.com">Go back to VIP's Home Page</a>
+                <a href="index.html">Member Dashboard</a>
+                <a href="tel:6314721234">(631) 472-1234</a>
+            </div>
+            <p class="footer-copy">© 2026 VIP Billiards Inc. · Bayport, New York<br><span
+                    style="opacity: 0.5; font-size: 0.75rem;">Powered by VIP Billiards™</span></p>
+        </div>
+    </footer>
+
+    <script>
+        // ── FAQ ACCORDION ──
+        document.querySelectorAll('.faq-question').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const item = btn.parentElement;
+                const answer = item.querySelector('.faq-answer');
+                const isOpen = item.classList.contains('open');
+
+                // Close all others
+                document.querySelectorAll('.faq-item').forEach(i => {
+                    if (i !== item) {
+                        i.classList.remove('open');
+                        i.querySelector('.faq-answer').style.maxHeight = null;
+                    }
+                });
+
+                // Toggle current
+                if (isOpen) {
+                    item.classList.remove('open');
+                    answer.style.maxHeight = null;
+                } else {
+                    item.classList.add('open');
+                    answer.style.maxHeight = answer.scrollHeight + 'px';
+                }
+            });
+        });
+
+        // ── STRIPE SUCCESS HANDLER ──
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('upgrade') === 'success') {
+            alert('Your account has been upgraded! Redirecting to your dashboard...');
+            window.location.href = 'index.html?upgrade=success';
+        }
+
+        // ── SMOOTH SCROLL ──
+        document.querySelectorAll('a[href^="#"]').forEach(a => {
+            a.addEventListener('click', e => {
+                const target = document.querySelector(a.getAttribute('href'));
+                if (target) {
+                    e.preventDefault();
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        // ════════════════════════════════════════
+        // INTERACTIVE HERO SHOWCASE (BULLETPROOF)
+        // ════════════════════════════════════════
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.showcase-tab');
+            const slides = document.querySelectorAll('.showcase-slide');
+
+            // Safety check: if the elements aren't found, stop here to prevent errors
+            if (tabs.length === 0 || slides.length === 0) return;
+
+            let currentSlideIndex = 0;
+            let slideInterval;
+
+            // Function to swap the active classes
+            function goToSlide(index) {
+                tabs.forEach(t => t.classList.remove('active'));
+                slides.forEach(s => s.classList.remove('active'));
+
+                currentSlideIndex = index;
+
+                tabs[currentSlideIndex].classList.add('active');
+                const targetSlide = document.getElementById(tabs[currentSlideIndex].dataset.target);
+                if (targetSlide) {
+                    targetSlide.classList.add('active');
+                }
+            }
+
+            // Function to run the 5-second loop
+            function startAutoSlide() {
+                clearInterval(slideInterval); // Clear any existing timers so they don't overlap
+                slideInterval = setInterval(() => {
+                    let nextIndex = (currentSlideIndex + 1) % slides.length;
+                    goToSlide(nextIndex);
+                }, 5000);
+            }
+
+            // If a user clicks a tab manually, jump to it and restart the 5-second clock
+            tabs.forEach((tab, index) => {
+                tab.addEventListener('click', () => {
+                    goToSlide(index);
+                    startAutoSlide();
+                });
+            });
+
+            // Start the rotation as soon as the page loads
+            startAutoSlide();
+        });
+
+    </script>
+</body>
+
+</html>

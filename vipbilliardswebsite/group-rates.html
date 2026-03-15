@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Billiards - Group Rates</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0b0f 0%, #1a1d29 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* HEADER STYLES */
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #C5B358;
+        }
+
+        .page-title {
+            color: #C5B358;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            color: #8b9bb4;
+            font-size: 1rem;
+            font-weight: bold;
+            line-height: 1.6;
+        }
+
+        /* BUTTONS */
+        .back-button {
+            display: inline-block;
+            margin-bottom: 30px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #C5B358 0%, #D4C469 100%);
+            color: #0a0b0f;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(197, 179, 88, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(197, 179, 88, 0.5);
+        }
+
+        .btn-action {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 15px 40px;
+            background: #C5B358;
+            color: #0a0b0f;
+            text-decoration: none;
+            font-weight: 800;
+            text-transform: uppercase;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(197, 179, 88, 0.2);
+        }
+
+        .btn-action:hover {
+            background: #D4C469;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(197, 179, 88, 0.4);
+        }
+
+        /* SECTIONS / CARDS */
+        .section-card {
+            background: linear-gradient(135deg, #1a1d29 0%, #0f111a 100%);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            color: #05d9e8;
+            font-size: 1.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* EVENT TYPES TAGS */
+        .event-types {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 10px;
+        }
+
+        .event-tag {
+            background: rgba(197, 179, 88, 0.1);
+            border: 1px solid #C5B358;
+            color: #C5B358;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        /* PRICING TABLE */
+        .rates-table-container {
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .rates-table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 500px;
+        }
+
+        .rates-table th {
+            text-align: left;
+            padding: 15px;
+            color: #C5B358;
+            border-bottom: 2px solid #333;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+        }
+
+        .rates-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #b8c5d6;
+            font-size: 1rem;
+        }
+
+        .rates-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .rates-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: white;
+        }
+
+        .table-note {
+            text-align: center;
+            color: #666;
+            font-style: italic;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+
+        /* DETAILS GRID */
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .detail-card {
+            border-left: 5px solid #C5B358;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .detail-card h3 {
+            color: white;
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-card ul {
+            list-style: none;
+        }
+
+        .detail-card ul li {
+            color: #b8c5d6;
+            margin-bottom: 10px;
+            padding-left: 20px;
+            position: relative;
+            line-height: 1.5;
+        }
+
+        .detail-card ul li::before {
+            content: '•';
+            color: #C5B358;
+            position: absolute;
+            left: 0;
+            font-weight: bold;
+        }
+
+        .cta-container {
+            text-align: center;
+            margin-top: 40px;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .details-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body data-page="group-rates">
+    <div id="nav-placeholder"></div>
+    <div class="container">
+        <a href="index.html#group-rates-preview" class="back-button">← Back to Home</a>
+
+        <div class="page-header">
+            <div class="page-title">🎉 Let's Celebrate</div>
+            <div class="page-subtitle">Make your next celebration memorable at VIP Billiards.<br>We accommodate groups
+                from 10 to 70 people.</div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">Perfect For</div>
+            <div class="event-types">
+                <span class="event-tag">🎂 Birthdays</span>
+                <span class="event-tag">💍 Anniversaries</span>
+                <span class="event-tag">🎉 Retirement</span>
+                <span class="event-tag">💼 Corporate Events</span>
+                <span class="event-tag">🥂 Bachelor/Bachelorette</span>
+                <span class="event-tag">❤️ Fundraisers</span>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">Group Table Rates</div>
+
+            <div class="rates-table-container">
+                <table class="rates-table">
+                    <thead>
+                        <tr>
+                            <th># of Tables</th>
+                            <th>2 Hours</th>
+                            <th>3 Hours</th>
+                            <th>4 Hours</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>2 Tables</strong></td>
+                            <td>$96</td>
+                            <td>$144</td>
+                            <td>$192</td>
+                        </tr>
+                        <tr>
+                            <td><strong>3 Tables</strong></td>
+                            <td>$144</td>
+                            <td>$216</td>
+                            <td>$288</td>
+                        </tr>
+                        <tr>
+                            <td><strong>4 Tables</strong></td>
+                            <td>$192</td>
+                            <td>$288</td>
+                            <td>$384</td>
+                        </tr>
+                        <tr>
+                            <td><strong>5 Tables</strong></td>
+                            <td>$240</td>
+                            <td>$360</td>
+                            <td>$480</td>
+                        </tr>
+                        <tr>
+                            <td><strong>6 Tables</strong></td>
+                            <td>$288</td>
+                            <td>$432</td>
+                            <td>$576</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="table-note">
+                💡 We suggest <strong>1 table for every 4-5 guests</strong>. Example: A party of 15 people would be
+                comfortable with 3 tables.
+            </div>
+        </div>
+
+        <div class="section-card">
+            <div class="section-title">Party Details</div>
+
+            <div class="details-grid">
+                <div class="detail-card">
+                    <h3>🍔 Food & Drinks</h3>
+                    <ul>
+                        <li>Full bar available with drink tab or cash bar options</li>
+                        <li><strong>Outside food is welcome</strong> (drinks must be purchased through us)</li>
+                        <li>Local caterer recommendations available upon request</li>
+                        <li>Folding tables provided for food service setup</li>
+                        <li><em>*Valid ID required for alcoholic beverages</em></li>
+                    </ul>
+                </div>
+
+                <div class="detail-card">
+                    <h3>📋 Logistics</h3>
+                    <ul>
+                        <li>10% deposit required for reservations of 4+ tables</li>
+                        <li>Decorations are welcome (please, no confetti)</li>
+                        <li>Tables will be reserved together in a dedicated section</li>
+                        <li>Extra folding tables provided for gifts/cake</li>
+                        <li>Small groups (under 3 tables) can simply call ahead</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cta-container">
+            <a href="mailto:vipbilliards@optonline.net?subject=Group Event Inquiry" class="btn-action">Email to Reserve
+                Your Event</a>
+            <p style="margin-top: 15px; color: #666; font-size: 0.9rem;">Or call us at (631) 472-1234</p>
+        </div>
+
+    </div>
+    <script src="/js/nav-loader.js"></script>
+</body>
+
+</html>

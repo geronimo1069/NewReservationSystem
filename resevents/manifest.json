@@ -1,0 +1,19 @@
+{
+  "id": "/resevents/",
+  "name": "VIP ResEvents Command",
+  "short_name": "ResEvents",
+  "description": "Exclusive Management Portal for VIP Reservations and Events",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0f111a",
+  "theme_color": "#C5B358",
+  "icons": [
+    {
+      "src": "https://vipbilliardsinc.com/images/VIPLogo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

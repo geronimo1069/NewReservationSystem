@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In — VIP Billiards</title>
+    <link rel="icon" type="image/png" href="https://vipbilliardsinc.com/images/VIPLogo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="member.css">
+    <style>
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-top: 24px;
+            text-align: left;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .form-input {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--gold);
+            box-shadow: 0 0 10px rgba(197, 179, 88, 0.1);
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 8px;
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-light);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(197, 179, 88, 0.3);
+        }
+
+        .auth-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .auth-divider::before,
+        .auth-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .auth-toggle {
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .auth-toggle-link {
+            color: var(--gold);
+            text-decoration: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .auth-toggle-link:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            color: var(--neon-red);
+            font-size: 0.85rem;
+            margin-top: 8px;
+            display: none;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .auth-forgot {
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .js-hidden {
+            display: none !important;
+        }
+
+        .password-wrap {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .password-wrap .form-input {
+            padding-right: 44px;
+            flex: 1;
+        }
+
+        .btn-toggle-pwd {
+            position: absolute;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px;
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-toggle-pwd:hover {
+            color: var(--gold);
+        }
+
+        .auth-forgot-link {
+            font-size: 0.8rem;
+        }
+    </style>
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"
+        }
+    }
+    </script>
+</head>
+
+<body>
+    <div class="app">
+        <div id="authScreen">
+            <img src="https://vipbilliardsinc.com/images/VIPLogo.png" alt="VIP Billiards" class="auth-logo">
+            <div class="auth-title">VIP MEMBERS</div>
+            <div class="auth-sub">VIP Billiards · Bayport, NY</div>
+
+            <div class="auth-card">
+                <h2 id="authTitle">WELCOME BACK</h2>
+                <p id="authDesc">Sign in with your email or social account to access your dashboard.</p>
+
+                <form class="auth-form" id="emailAuthForm">
+                    <div id="signupFields" class="js-hidden">
+                        <div class="form-group">
+                            <label class="form-label" for="fullName">Full Name</label>
+                            <input type="text" id="fullName" class="form-input" placeholder="Johnny Billiards">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="phone">Phone Number</label>
+                            <input type="tel" id="phone" class="form-input" placeholder="(555) 000-0000">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="email">Email Address</label>
+                        <input type="email" id="email" class="form-input" placeholder="name@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="password">Password</label>
+                        <div class="password-wrap">
+                            <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                            <button type="button" class="btn-toggle-pwd" id="btnTogglePwd"
+                                title="Show/Hide Password">👁️</button>
+                        </div>
+                    </div>
+                    <div id="errorMessage" class="error-message"></div>
+                    <button type="submit" class="btn-primary" id="btnSubmit">SIGN IN</button>
+                    <div class="auth-forgot" id="forgotPwdContainer">
+                        <a class="auth-toggle-link auth-forgot-link" id="btnForgotPwd">Forgot your password?</a>
+                    </div>
+                </form>
+
+                <div class="auth-toggle">
+                    <span id="toggleText">Don't have an account?</span>
+                    <a class="auth-toggle-link" id="authToggle">Create Account</a>
+                </div>
+
+                <div class="auth-divider">or use social</div>
+
+                <div class="social-group">
+                    <button class="btn-google" id="btnGoogleSignIn">
+                        <svg width="20" height="20" viewBox="0 0 48 48">
+                            <path fill="#EA4335"
+                                d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+                            <path fill="#4285F4"
+                                d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+                            <path fill="#FBBC05"
+                                d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+                            <path fill="#34A853"
+                                d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+                            <path fill="none" d="M0 0h48v48H0z" />
+                        </svg>
+                        Continue with Google
+                    </button>
+                    <!-- Facebook button can be added here if needed, keeping Google as the primary social option for now -->
+                </div>
+
+                <div class="auth-tagline">
+                    "Netflix charges you $15/month and doesn't give you free Netflix for watching more.<br>
+                    We charge $4.95 and give you free pool for playing more."
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, updateProfile, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
+        import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyATn_LRrT14QeRp7primG0dK82pcj7I_K0",
+            authDomain: "vip-reservations.firebaseapp.com",
+            projectId: "vip-reservations",
+            storageBucket: "vip-reservations.firebasestorage.app",
+            messagingSenderId: "721372947742",
+            appId: "1:721372947742:web:441d5efe90198dbef2550f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const googleProvider = new GoogleAuthProvider();
+
+        let isLoginMode = true;
+        let isSigningUp = false;
+
+        const emailAuthForm = document.getElementById('emailAuthForm');
+        const authToggle = document.getElementById('authToggle');
+        const authTitle = document.getElementById('authTitle');
+        const authDesc = document.getElementById('authDesc');
+        const toggleText = document.getElementById('toggleText');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const errorMessage = document.getElementById('errorMessage');
+        const signupFields = document.getElementById('signupFields');
+        const fullNameInput = document.getElementById('fullName');
+        const phoneInput = document.getElementById('phone');
+        const btnForgotPwd = document.getElementById('btnForgotPwd');
+        const forgotPwdContainer = document.getElementById('forgotPwdContainer');
+
+        // Check for signup parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('signup') === 'true') {
+            toggleMode(false);
+        }
+
+        onAuthStateChanged(auth, user => {
+            if (user && !isSigningUp) {
+                // Only redirect if we aren't currently in the middle of the signup process
+                window.location.href = 'index.html' + window.location.search;
+            }
+        });
+
+        authToggle.addEventListener('click', () => {
+            toggleMode(!isLoginMode);
+        });
+
+        function toggleMode(login) {
+            isLoginMode = login;
+            authTitle.textContent = isLoginMode ? 'WELCOME BACK' : 'CREATE ACCOUNT';
+
+            if (isLoginMode) {
+                authDesc.innerHTML = 'Sign in with your email or social account to access your dashboard.';
+            } else {
+                authDesc.innerHTML = `
+                    Join the community for free. Earn shadow points, book tables, and see real-time crowd vibe.
+                    <div class="auth-provider-alert">
+                        <strong class="provider-alert-title">⚠️ PROVIDER ALERT:</strong>
+                        Optonline/Cablevision accounts often block system emails. We highly recommend using <strong>Gmail</strong> or <strong>Outlook</strong>.
+                    </div>
+                `;
+            }
+
+            btnSubmit.textContent = isLoginMode ? 'SIGN IN' : 'CREATE ACCOUNT';
+            toggleText.textContent = isLoginMode ? "Don't have an account?" : "Already have an account?";
+            authToggle.textContent = isLoginMode ? "Create Account" : "Sign In";
+            signupFields.classList.toggle('js-hidden', isLoginMode);
+            forgotPwdContainer.classList.toggle('js-hidden', !isLoginMode);
+            errorMessage.style.display = 'none';
+
+            fullNameInput.required = !isLoginMode;
+            phoneInput.required = !isLoginMode;
+        }
+
+        document.getElementById('btnTogglePwd').addEventListener('click', () => {
+            const pwd = document.getElementById('password');
+            const btn = document.getElementById('btnTogglePwd');
+            if (pwd.type === 'password') {
+                pwd.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                pwd.type = 'password';
+                btn.textContent = '👁️';
+            }
+        });
+
+        btnForgotPwd.addEventListener('click', async () => {
+            const email = document.getElementById('email').value;
+            if (!email) {
+                alert("Please enter your email address first to reset your password.");
+                return;
+            }
+            try {
+                await sendPasswordResetEmail(auth, email);
+                alert("Password reset email sent! Please check your inbox (and spam folder).");
+            } catch (error) {
+                console.error("Reset error:", error);
+                alert("Error sending reset email: " + error.message);
+            }
+        });
+
+        emailAuthForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            btnSubmit.disabled = true;
+            btnSubmit.textContent = isLoginMode ? 'SIGNING IN...' : 'CREATING ACCOUNT...';
+            errorMessage.style.display = 'none';
+
+            try {
+                if (isLoginMode) {
+                    await signInWithEmailAndPassword(auth, email, password);
+                } else {
+                    isSigningUp = true;
+                    const fullName = fullNameInput.value;
+                    const phone = phoneInput.value;
+
+                    // 1. Create User
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+
+                    // 2. Set Display Name (so index.html uses it if there is a race condition)
+                    await updateProfile(userCredential.user, { displayName: fullName });
+
+                    // 3. Create Firestore Doc
+                    await initMemberDoc(userCredential.user, fullName, phone);
+
+                    // 4. Final Redirect
+                    window.location.href = 'index.html' + window.location.search;
+                }
+            } catch (error) {
+                console.error('Auth error:', error);
+                isSigningUp = false;
+                errorMessage.textContent = getFriendlyErrorMessage(error.code);
+                errorMessage.style.display = 'block';
+                btnSubmit.disabled = false;
+                btnSubmit.textContent = isLoginMode ? 'SIGN IN' : 'JOIN FREE';
+            }
+        });
+
+        document.getElementById('btnGoogleSignIn').addEventListener('click', () => {
+            signInWithPopup(auth, googleProvider).catch(e => {
+                console.error('Google Sign in failed:', e);
+                errorMessage.textContent = 'Google sign-in failed. Please try again.';
+                errorMessage.style.display = 'block';
+            });
+        });
+
+        async function initMemberDoc(user, providedName = '', providedPhone = '') {
+            const memberRef = doc(db, 'members', user.uid);
+            const memberSnap = await getDoc(memberRef);
+
+            if (!memberSnap.exists()) {
+                const email = user.email.toLowerCase().trim();
+                const emailKey = email.replace(/[\/\.]/g, '-');
+
+                const newMember = {
+                    uid: user.uid,
+                    email: email,
+                    emailKey: emailKey, // Following user instruction to create emailKey
+                    name: providedName || user.displayName || email.split('@')[0],
+                    tier: 'FREE',
+                    joinedDate: new Date().toISOString(),
+                    phone: providedPhone || '',
+                    mobileCarrier: '',
+                    loyaltyPoints: 0,
+                    shadowPoints: 0,
+                    lifetimeHours: 0,
+                    lastReservationMonth: null,
+                    reservationCountThisMonth: 0
+                };
+                await setDoc(memberRef, newMember);
+                console.log('✓ New member registered via email:', email);
+            }
+        }
+
+        function getFriendlyErrorMessage(code) {
+            switch (code) {
+                case 'auth/user-not-found': return 'No account found with this email.';
+                case 'auth/wrong-password': return 'Incorrect password.';
+                case 'auth/email-already-in-use': return 'An account with this email already exists.';
+                case 'auth/weak-password': return 'Password should be at least 6 characters.';
+                case 'auth/invalid-email': return 'Invalid email address.';
+                default: return 'Authentication failed. Please try again.';
+            }
+        }
+    </script>
+</body>
+
+</html>

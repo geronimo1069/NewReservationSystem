@@ -1,0 +1,892 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Billiards | Reservation System</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Custom Theme -->
+    <link rel="stylesheet" href="./src/ui/main.css">
+    
+    <!-- PWA / Mobile App Config -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f111a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="ResEvents">
+    <link rel="apple-touch-icon" href="https://vipbilliardsinc.com/images/VIPLogo.png">
+
+    <!-- Firebase Import Map -->
+    <script type="importmap">
+      {
+        "imports": {
+          "firebase/app": "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js",
+          "firebase/auth": "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js",
+          "firebase/firestore": "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"
+        }
+      }
+    </script>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <img src="https://vipbilliardsinc.com/images/VIPLogo.png" alt="VIP Billiards Logo" class="vip-logo">
+            <p id="welcome-msg">Exclusive Member Access</p>
+        </header>
+
+        <div id="login-section" class="auth-container">
+            <button id="btn-login" class="btn-google">
+                <svg width="20" height="20" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.127-.844 2.082-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615z"
+                        fill="#4285F4" />
+                    <path
+                        d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"
+                        fill="#34A853" />
+                    <path
+                        d="M3.964 10.705c-.18-.54-.282-1.117-.282-1.705s.102-1.165.282-1.705V4.963H.957A8.996 8.996 0 0 0 0 9c0 1.451.346 2.827.957 4.037l3.007-2.332z"
+                        fill="#FBBC05" />
+                    <path
+                        d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.582C13.463.891 11.426 0 9 0 5.482 0 2.443 2.049.957 4.963L3.964 7.295C4.672 5.168 6.656 3.58 9 3.58z"
+                        fill="#EA4335" />
+                </svg>
+                Sign In with Google
+            </button>
+        </div>
+
+        <!-- PRONG 1: Member UI -->
+        <div id="user-profile" class="user-profile">
+            <div id="membership-card" class="membership-card">
+                <div class="card-header">
+                    <div>
+                        <h3 id="user-name" class="user-name">Member Name</h3>
+                        <p id="user-email-display"></p>
+                    </div>
+                    <span id="user-tier" class="user-tier">PRO</span>
+                </div>
+
+                <div class="card-stats">
+                    <div class="stat-item">
+                        <label>Lifetime Hours</label>
+                        <span id="stat-hours">00.0</span>
+                    </div>
+                    <div class="stat-item">
+                        <label>VIP Points</label>
+                        <span id="stat-points">00</span>
+                    </div>
+                </div>
+
+                <div id="reward-progress-container" class="reward-progress-wrapper">
+                    <div class="progress-label">
+                        <span>Free Hour Progress</span>
+                        <span id="progress-text">0 / 10 Pts</span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div id="progress-fill" class="progress-fill"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tier Nudge (Rule: Tier Nudge) -->
+            <div id="upgrade-nudge" class="upgrade-nudge">
+                <p>Upgrade to PRO</p>
+                <p>Unlock 7-day booking window and earn VIP rewards on every hour!</p>
+            </div>
+
+            <!-- Booking Section -->
+            <div id="booking-section" class="booking-section">
+                <h3>Select Your Session</h3>
+                <div id="date-grid" class="date-grid">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+
+            <!-- NEW: Member's Own Reservations -->
+            <div id="member-res-section" class="booking-section">
+                <h3>My Reservations</h3>
+                <div id="member-res-list" class="res-list">
+                    <p class="status-msg">Syncing activity...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRONG 2: Admin UI (Command Center) -->
+        <div id="admin-panel" class="admin-panel">
+            <div class="admin-header">
+                <h2>Command Center</h2>
+                <div class="toggle-group filter-toggles">
+                    <button id="toggle-future" class="btn-toggle active">Upcoming</button>
+                    <button id="toggle-history" class="btn-toggle">History</button>
+                </div>
+                <div class="toggle-group mode-toggles">
+                    <button id="btn-mode-res" class="btn-toggle active">Reservations</button>
+                    <button id="btn-mode-ev" class="btn-toggle">Events</button>
+                </div>
+            </div>
+
+            <div class="admin-layout">
+                <div class="admin-main-col">
+                    <!-- COL 1: RESERVATIONS -->
+                    <div id="col-reservations" class="admin-col active">
+                        <h3>Reservations</h3>
+                        <div id="res-list" class="res-list">
+                            <p>Establishing secure link...</p>
+                        </div>
+                    </div>
+
+                    <!-- COL 2: EVENTS -->
+                    <div id="col-events" class="admin-col">
+                        <h3>
+                            Event Manager
+                            <button id="btn-show-event-form" class="btn-action" onclick="window.toggleEventForm()">+ Create Event</button>
+                        </h3>
+                        
+                        <!-- NEW EVENT FORM -->
+                        <div id="event-creation-panel" class="event-form">
+                            <input type="text" id="ev-title" class="input-cyber" placeholder="Event Title (e.g. APA Tournament)">
+                            <div class="form-row">
+                                <input type="date" id="ev-date" class="input-cyber" placeholder="Select event date">
+                                <div class="time-inputs">
+                                    <input type="time" id="ev-start" class="input-cyber" title="Start Time">
+                                    <input type="time" id="ev-end" class="input-cyber" title="End Time">
+                                </div>
+                            </div>
+                            <textarea id="ev-internal" class="input-cyber" placeholder="Internal Notes (Staff only)"></textarea>
+                            <textarea id="ev-public" class="input-cyber" placeholder="Public Description (Shows on website)"></textarea>
+                            <div class="form-row flex-center">
+                                <div class="switch-group">
+                                    <input type="checkbox" id="ev-is-public" checked>
+                                    <label for="ev-is-public">Show on Website</label>
+                                </div>
+                                <button id="btn-save-event" class="btn-cyber">Save Event</button>
+                            </div>
+                        </div>
+
+                        <div id="event-list" class="res-list">
+                            <p>Syncing broadcast schedule...</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- NEW: DETAILS SIDEBAR -->
+                <div id="details-panel" class="admin-details-panel">
+                    <button id="btn-details-back" class="btn-mobile-back" onclick="closeDetails()">
+                        <i class="fas fa-arrow-left"></i> BACK TO LIST
+                    </button>
+                    
+                    <div id="details-view-content" class="details-empty">
+                        <p>SELECT A RECORD TO VIEW INTEL</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mobile Bottom Nav -->
+            <nav class="mobile-nav">
+                <button id="nav-btn-res" class="nav-item active" onclick="switchMode('res')">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Reservations</span>
+                </button>
+                <button id="nav-btn-ev" class="nav-item" onclick="switchMode('ev')">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Events</span>
+                </button>
+            </nav>
+        </div>
+        </div>
+
+
+
+
+
+        <!-- ACTION PANEL (Fixed Overlay for Mobile) -->
+        <div id="action-modal" class="modal">
+            <div class="modal-content">
+                <h3 id="action-modal-title">EDIT OPTIONS</h3>
+                <div class="action-grid">
+                    <button onclick="window.confirmStatusUpdate('ARRIVED')" class="btn-action-large status-arrived">MARK ARRIVED</button>
+                    <button onclick="window.confirmStatusUpdate('NO-SHOW')" class="btn-action-large status-noshow">MARK NO-SHOW</button>
+                    <button onclick="window.confirmStatusUpdate('CANCELLED')" class="btn-action-large status-cancelled">MARK CANCELLED</button>
+                    <button id="btn-open-edit" class="btn-action-large status-pending">MANUAL EDIT</button>
+                </div>
+                <button id="btn-close-action" class="btn-cancel-modal">ABORT</button>
+            </div>
+        </div>
+
+        <!-- EDIT PANEL (Fixed Overlay) -->
+        <div id="edit-modal" class="modal">
+            <div class="modal-content modal-large">
+                <h3 id="edit-panel-title">Update Details</h3>
+                <div id="edit-fields-res">
+                    <label for="edit-date">Change Date</label>
+                    <input type="date" id="edit-date">
+                    <label for="edit-time">Change Time</label>
+                    <input type="time" id="edit-time">
+                </div>
+                <div id="edit-fields-ev" class="hidden">
+                    <label for="edit-ev-title">Event Title</label>
+                    <input type="text" id="edit-ev-title" class="input-cyber">
+                    
+                    <div class="edit-grid-half">
+                        <div>
+                            <label for="edit-ev-date">Date</label>
+                            <input type="date" id="edit-ev-date" class="input-cyber">
+                        </div>
+                        <div>
+                            <label for="edit-ev-public">Visibility</label>
+                            <select id="edit-ev-public" class="input-cyber">
+                                <option value="true">Public (On Site)</option>
+                                <option value="false">Staff Only</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="edit-grid-half">
+                        <div>
+                            <label for="edit-ev-start">Start Time</label>
+                            <input type="time" id="edit-ev-start" class="input-cyber">
+                        </div>
+                        <div>
+                            <label for="edit-ev-end">End Time</label>
+                            <input type="time" id="edit-ev-end" class="input-cyber">
+                        </div>
+                    </div>
+
+                    <label for="edit-ev-internal">Internal Notes</label>
+                    <textarea id="edit-ev-internal" class="input-cyber" placeholder="Staff only notes..."></textarea>
+                    
+                    <label for="edit-ev-public-notes">Public Description</label>
+                    <textarea id="edit-ev-public-notes" class="input-cyber" placeholder="Description for website..."></textarea>
+                </div>
+                
+                <div class="details-actions details-stack-fix">
+                    <button id="btn-save-edit" class="btn-cyber">APPLY CHANGES</button>
+                    <button id="btn-delete-record" class="btn-action btn-delete">DELETE PERMANENTLY</button>
+                    <button id="btn-close-modal" class="btn-cancel-modal">ABORT</button>
+                </div>
+            </div>
+        </div>
+
+        <button id="btn-logout" class="btn-logout">End Session</button>
+    </div>
+
+    <!-- Initialization and Logic -->
+    <script type="module">
+        import { AuthManager } from './src/auth/AuthManager.js';
+        import { MemberPortal } from './src/membership/MemberPortal.js';
+        import { ResManager } from './src/admin/ResManager.js';
+        import { EventManager } from './src/admin/EventManager.js';
+        import { getActiveConfig } from './config.js';
+        import { getFirestore, collection, query, where, getDocs, doc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+        const activeEnv = getActiveConfig();
+        const db = getFirestore();
+
+        // Register Service Worker for "App" functionality
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(err => console.log('SW registration failed:', err));
+            });
+        }
+
+        const loginBtn = document.getElementById('btn-login');
+        const logoutBtn = document.getElementById('btn-logout');
+        const loginSection = document.getElementById('login-section');
+        const userProfile = document.getElementById('user-profile');
+        const welcomeMsg = document.getElementById('welcome-msg');
+        const adminPanel = document.getElementById('admin-panel');
+        const resList = document.getElementById('res-list');
+        const eventList = document.getElementById('event-list');
+        const eventCreationPanel = document.getElementById('event-creation-panel');
+        
+        const dateGrid = document.getElementById('date-grid');
+        const userNameEl = document.getElementById('user-name');
+        const userTierEl = document.getElementById('user-tier');
+        const userEmailEl = document.getElementById('user-email-display');
+        const upgradeNudge = document.getElementById('upgrade-nudge');
+
+        const editModal = document.getElementById('edit-modal');
+        const editDateInput = document.getElementById('edit-date');
+        const editTimeInput = document.getElementById('edit-time');
+        const saveEditBtn = document.getElementById('btn-save-edit');
+        const closeModalBtn = document.getElementById('btn-close-modal');
+
+        const toggleFuture = document.getElementById('toggle-future');
+        const toggleHistory = document.getElementById('toggle-history');
+        const btnModeRes = document.getElementById('btn-mode-res');
+        const btnModeEv = document.getElementById('btn-mode-ev');
+        const colRes = document.getElementById('col-reservations');
+        const colEv = document.getElementById('col-events');
+
+        const actionModal = document.getElementById('action-modal');
+        const actionCloseBtn = document.getElementById('btn-close-action');
+        const openEditBtn = document.getElementById('btn-open-edit');
+
+        // Event Form Elements
+        const evTitle = document.getElementById('ev-title');
+        const evDate = document.getElementById('ev-date');
+        const evStart = document.getElementById('ev-start');
+        const evEnd = document.getElementById('ev-end');
+        const evInternal = document.getElementById('ev-internal');
+        const evPublic = document.getElementById('ev-public');
+        const evIsPublic = document.getElementById('ev-is-public');
+        const btnSaveEvent = document.getElementById('btn-save-event');
+        const detailsViewContent = document.getElementById('details-view-content');
+
+        let currentEditingId = null;
+        let currentEditingEventId = null;
+        let activeResData = null;
+        let filterPast = true;
+        let selectedItemId = null;
+        let lastReservationsSnapshot = [];
+        let lastEventsSnapshot = [];
+
+        toggleFuture.onclick = () => { filterPast = true; updateToggles(); loadAdminData(); };
+        toggleHistory.onclick = () => { filterPast = false; updateToggles(); loadAdminData(); };
+
+        function updateToggles() {
+            toggleFuture.classList.toggle('active', filterPast);
+            toggleHistory.classList.toggle('active', !filterPast);
+        }
+
+        window.switchMode = (mode) => {
+            const isRes = mode === 'res';
+            btnModeRes.classList.toggle('active', isRes);
+            btnModeEv.classList.toggle('active', !isRes);
+            colRes.classList.toggle('active', isRes);
+            colEv.classList.toggle('active', !isRes);
+
+            // Toggle theme on body
+            document.body.classList.toggle('theme-event', !isRes);
+
+            // Update mobile nav
+            document.getElementById('nav-btn-res').classList.toggle('active', isRes);
+            document.getElementById('nav-btn-ev').classList.toggle('active', !isRes);
+        };
+
+        btnModeRes.onclick = () => window.switchMode('res');
+        btnModeEv.onclick = () => window.switchMode('ev');
+
+        window.closeDetails = () => {
+            document.getElementById('details-panel').classList.remove('mobile-view');
+        };
+
+        async function updateUI(user, profile) {
+            if (user && profile) {
+                loginSection.style.display = 'none';
+                logoutBtn.style.display = 'block';
+
+                userNameEl.textContent = profile.name || user.displayName;
+                userEmailEl.textContent = user.email.toUpperCase();
+
+                const userTier = (profile.tier || 'FREE').toUpperCase();
+                userTierEl.textContent = userTier;
+                userTierEl.className = `user-tier tier-${userTier.toLowerCase()}`;
+
+                // ADMIN CHECK
+                const isAdmin = (user.email.toLowerCase() === activeEnv.adminEmail.toLowerCase()) || (userTier === 'ADMIN');
+                
+                if (isAdmin) {
+                    document.querySelector('.container').classList.add('admin-mode');
+                    adminPanel.style.display = 'block';
+                    userProfile.style.display = 'none'; 
+                    welcomeMsg.innerHTML = `OPERATOR: <span style="color:var(--gold)">ONLINE</span>`;
+                    loadAdminData();
+                } else {
+                    document.querySelector('.container').classList.remove('admin-mode');
+                    adminPanel.style.display = 'none';
+                    userProfile.style.display = 'flex';
+                    welcomeMsg.innerHTML = `VIP MEMBER STATUS: <span style="color:var(--gold)">ACTIVE</span>`;
+                    
+                    // Populating Membership Card
+                    document.getElementById('stat-hours').textContent = (profile.lifetimeHours || 0).toFixed(1);
+                    document.getElementById('stat-points').textContent = (profile.loyaltyPoints || 0).toString().padStart(2, '0');
+
+                    const progressContainer = document.getElementById('reward-progress-container');
+                    if (userTier === 'PAID' || userTier === 'PRO' || userTier === 'ADMIN') {
+                        progressContainer.style.display = 'block';
+                        upgradeNudge.style.display = 'none';
+                        const pts = profile.loyaltyPoints || 0;
+                        const progress = (pts % 10) * 10;
+                        document.getElementById('progress-fill').style.width = `${progress}%`;
+                        document.getElementById('progress-text').textContent = `${pts % 10} / 10 PTS`;
+                    } else {
+                        progressContainer.style.display = 'none';
+                        upgradeNudge.style.display = 'block';
+                    }
+
+                    renderBookingDates(profile.tier);
+                    loadMemberReservations(user.email);
+                }
+            } else {
+                loginSection.style.display = 'flex';
+                userProfile.style.display = 'none';
+                adminPanel.style.display = 'none';
+                logoutBtn.style.display = 'none';
+                welcomeMsg.textContent = 'Exclusive Member Access';
+            }
+        }
+
+        let adminResUnsub = null;
+        let adminEventUnsub = null;
+        let memberUnsubscribe = null;
+
+        async function loadAdminData() {
+            if (adminResUnsub) adminResUnsub();
+            if (adminEventUnsub) adminEventUnsub();
+
+            resList.innerHTML = '<p class="status-msg-loading">Syncing secure link...</p>';
+            eventList.innerHTML = '<p class="status-msg-loading">Syncing broadcast schedule...</p>';
+
+            adminResUnsub = ResManager.listenToReservations((reservations) => {
+                lastReservationsSnapshot = reservations;
+                renderReservations(reservations, 'res-list');
+                if (selectedItemId) updateDetailsView();
+            }, filterPast);
+
+            adminEventUnsub = EventManager.listenToEvents((events) => {
+                lastEventsSnapshot = events;
+                renderEvents(events);
+                if (selectedItemId) updateDetailsView();
+            }, filterPast);
+        }
+
+        async function loadMemberReservations(email) {
+            if (memberUnsubscribe) memberUnsubscribe();
+            const memberList = document.getElementById('member-res-list');
+            memberList.innerHTML = '<p class="status-msg-loading">Syncing your activity...</p>';
+
+            memberUnsubscribe = ResManager.listenToReservations((reservations) => {
+                const myRes = reservations.filter(r => (r.memberEmail && r.memberEmail.toLowerCase() === email.toLowerCase()));
+                renderReservations(myRes, 'member-res-list');
+            }, true);
+        }
+
+        // AVATAR HELPER
+        function getAvatarHTML(name, url) {
+            if (url) return `<img src="${url}" alt="avatar">`;
+            const char = (name || '?').charAt(0).toUpperCase();
+            return `<div class="avatar-letter">${char}</div>`;
+        }
+
+        function renderReservations(reservations, targetId = 'res-list') {
+            const listEl = document.getElementById(targetId);
+            listEl.innerHTML = '';
+
+            if (reservations.length === 0) {
+                listEl.innerHTML = `<p style="color:var(--text-muted); font-size: 0.7rem; padding: 1rem;">NO RECORDS FOUND.</p>`;
+                return;
+            }
+
+            reservations.forEach(res => {
+                const item = document.createElement('div');
+                item.className = `res-item ${selectedItemId === res.id ? 'selected' : ''}`;
+                item.onclick = () => window.selectRecord(res.id, 'reservation');
+
+                const name = res.memberName || res.name || 'Unknown Guest';
+                const status = (res.status || 'PENDING').toUpperCase();
+
+                let dayIndicator = '--';
+                let subDate = 'TBD';
+                let displayTime = res.time || '--:--';
+                let displayDate = res.date || '---';
+                let isToday = false;
+                
+                // DERIVE DATE/TIME
+                let d = null;
+                if (res.date) {
+                    d = new Date(res.date + 'T12:00:00');
+                } else if (res.reservationTime) {
+                    d = new Date(res.reservationTime);
+                    displayTime = d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                    displayDate = d.toLocaleDateString();
+                }
+
+                if (d && !isNaN(d.getTime())) {
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    const compareDate = new Date(d);
+                    compareDate.setHours(0,0,0,0);
+                    
+                    const diffDays = Math.round((compareDate - today) / (1000 * 60 * 60 * 24));
+                    isToday = (diffDays === 0);
+                    
+                    dayIndicator = d.getDate().toString();
+                    subDate = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+                }
+
+                item.innerHTML = `
+                    <div class="res-date-box">
+                        ${isToday ? '<div class="res-tag-today">TODAY</div>' : ''}
+                        <span class="indicator">${dayIndicator}</span>
+                        <span class="date-sub">${subDate}</span>
+                    </div>
+                    <div class="res-info">
+                        <h4>${name}</h4>
+                        <div class="res-meta-line">${displayDate} @ ${displayTime} | ${res.peopleCount || res.partySize || '?' } GUESTS</div>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        function renderEvents(events) {
+            eventList.innerHTML = '';
+            if (events.length === 0) {
+                eventList.innerHTML = `<p style="color:var(--text-muted); font-size: 0.7rem; padding: 1rem;">NO SCHEDULED EVENTS.</p>`;
+                return;
+            }
+
+            events.forEach(ev => {
+                const item = document.createElement('div');
+                item.className = `res-item ${selectedItemId === ev.id ? 'selected' : ''}`;
+                item.onclick = () => window.selectRecord(ev.id, 'event');
+                
+                const d = new Date(ev.date + 'T12:00:00');
+                const dayIndicator = d.getDate().toString();
+                const subDate = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
+
+                item.innerHTML = `
+                    <div class="res-date-box">
+                        <span class="indicator">${dayIndicator}</span>
+                        <span class="date-sub">${subDate}</span>
+                    </div>
+                    <div class="res-info">
+                        <h4>${ev.title}</h4>
+                        <div class="res-meta-line">${ev.startTime || ''} ${ev.endTime ? '- ' + ev.endTime : ''}</div>
+                    </div>
+                `;
+                eventList.appendChild(item);
+            });
+        }
+
+        window.selectRecord = (id, type) => {
+            selectedItemId = id;
+            updateDetailsView(type);
+            
+            // On mobile, trigger the slide-in view
+            if (window.innerWidth <= 900) {
+                document.getElementById('details-panel').classList.add('mobile-view');
+            }
+
+            // Refresh selection in lists
+            if (type === 'reservation') renderReservations(lastReservationsSnapshot);
+            else renderEvents(lastEventsSnapshot);
+        };
+
+        function updateDetailsView(type) {
+            let data = null;
+            if (!type) {
+                // Try to find in both
+                data = lastReservationsSnapshot.find(r => r.id === selectedItemId);
+                if (data) type = 'reservation';
+                else {
+                    data = lastEventsSnapshot.find(e => e.id === selectedItemId);
+                    if (data) type = 'event';
+                }
+            } else {
+                data = type === 'reservation' ? 
+                       lastReservationsSnapshot.find(r => r.id === selectedItemId) :
+                       lastEventsSnapshot.find(e => e.id === selectedItemId);
+            }
+
+            if (!data) {
+                detailsViewContent.innerHTML = `<div class="details-empty"><p>RECORD NOT FOUND</p></div>`;
+                return;
+            }
+
+            if (type === 'reservation') {
+                renderReservationDetails(data);
+            } else {
+                renderEventDetails(data);
+            }
+        }
+
+        function renderReservationDetails(res) {
+            const name = res.memberName || res.name || 'Guest User';
+            const status = (res.status || 'PENDING').toUpperCase();
+            
+            detailsViewContent.className = 'details-active';
+            detailsViewContent.innerHTML = `
+                <div class="details-header">
+                    <div class="large-avatar">
+                        ${getAvatarHTML(name, res.avatar || res.memberAvatar)}
+                    </div>
+                    <h2>${name}</h2>
+                    <p class="res-status-label status-${status.toLowerCase()}">${status}</p>
+                </div>
+                <div class="details-info-list">
+                    <div class="info-item"><label>Date / Time</label><value>${res.date || new Date(res.reservationTime).toLocaleDateString()} @ ${res.time || new Date(res.reservationTime).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}</value></div>
+                    <div class="info-item"><label>Party Size</label><value>${res.peopleCount || res.partySize || '?'} GUESTS</value></div>
+                    <div class="info-item"><label>Preference</label><value>${res.tableType || 'ANY'}</value></div>
+                    <div class="info-item"><label>Phone</label><value>${res.phone || 'NOT PROVIDED'}</value></div>
+                    <div class="info-item"><label>Email</label><value>${res.memberEmail || 'N/A'}</value></div>
+                    ${res.status === 'ARRIVED' && res.tableNumber ? `<div class="info-item"><label>Assigned Table</label><value>TABLE ${res.tableNumber}</value></div>` : ''}
+                </div>
+                <div class="details-actions">
+                    <button class="btn-cyber" onclick="window.openResMenu(event, '${res.id}', '${res.date}', '${res.time}')">EDIT</button>
+                </div>
+            `;
+        }
+
+        function renderEventDetails(ev) {
+            detailsViewContent.className = 'details-active';
+            detailsViewContent.innerHTML = `
+                <div class="details-header">
+                    <div class="large-avatar">🌐</div>
+                    <h2>${ev.title}</h2>
+                    <p class="res-status-label">${ev.public ? 'PUBLIC EVENT' : 'INTERNAL EVENT'}</p>
+                </div>
+                <div class="details-info-list">
+                    <div class="info-item"><label>Date</label><value>${ev.date}</value></div>
+                    <div class="info-item"><label>Schedule</label><value>${ev.startTime} - ${ev.endTime || 'END'}</value></div>
+                    <div class="info-item"><label>Visibility</label><value>${ev.public ? 'ON WEBSITE' : 'STAFF ONLY'}</value></div>
+                </div>
+                
+                <div class="notes-box">
+                    <span class="note-label note-internal">INTERNAL INTEL:</span>
+                    <p class="note-content">${ev.internalNotes || 'No internal notes recorded.'}</p>
+                    <span class="note-label note-public">PUBLIC FEED:</span>
+                    <p class="note-content">${ev.publicNotes || 'No public description.'}</p>
+                </div>
+
+                <div class="details-actions">
+                    <button class="btn-cyber" onclick="window.openEditModal('${ev.id}', null, null, 'event')">EDIT</button>
+                </div>
+            `;
+        }
+
+        // EVENT CRUD
+        window.toggleEventForm = () => {
+            const isHidden = eventCreationPanel.style.display === 'none';
+            eventCreationPanel.style.display = isHidden ? 'flex' : 'none';
+            if (isHidden) {
+                currentEditingEventId = null;
+                btnSaveEvent.textContent = 'SAVE EVENT';
+                clearEventForm();
+            }
+        };
+
+        function clearEventForm() {
+            evTitle.value = '';
+            evDate.value = '';
+            evStart.value = '';
+            evEnd.value = '';
+            evInternal.value = '';
+            evPublic.value = '';
+            evIsPublic.checked = true;
+        }
+
+        btnSaveEvent.onclick = async () => {
+            const data = {
+                title: evTitle.value,
+                date: evDate.value,
+                startTime: evStart.value,
+                endTime: evEnd.value,
+                internalNotes: evInternal.value,
+                publicNotes: evPublic.value,
+                public: evIsPublic.checked
+            };
+
+            if (!data.title || !data.date || !data.startTime) {
+                alert("Title, Date, and Start Time are required.");
+                return;
+            }
+
+            btnSaveEvent.disabled = true;
+            btnSaveEvent.textContent = 'COMMITTING...';
+            
+            const res = await EventManager.saveEvent(data, currentEditingEventId);
+            if (res.success) {
+                window.toggleEventForm();
+                clearEventForm();
+            } else {
+                alert("Failed to save event.");
+            }
+            btnSaveEvent.disabled = false;
+        };
+
+        // Better way: use global reference to snapshots
+        EventManager.listenToEvents((events) => {
+            lastEventsSnapshot = events;
+            renderEvents(events);
+        }, filterPast);
+
+        window.editEvent = (id) => {
+            const ev = lastEventsSnapshot.find(e => e.id === id);
+            if (ev) {
+                currentEditingEventId = id;
+                evTitle.value = ev.title;
+                evDate.value = ev.date;
+                evStart.value = ev.startTime;
+                evEnd.value = ev.endTime || '';
+                evInternal.value = ev.internalNotes || '';
+                evPublic.value = ev.publicNotes || '';
+                evIsPublic.checked = ev.public !== false;
+                
+                eventCreationPanel.style.display = 'flex';
+                btnSaveEvent.textContent = 'UPDATE EVENT';
+                eventCreationPanel.scrollIntoView({ behavior: 'smooth' });
+            }
+        };
+
+        window.deleteEvent = async (id) => {
+            if (confirm("Permanently delete this event from the timeline?")) {
+                await EventManager.deleteEvent(id);
+            }
+        };
+
+        // SHARED UI
+        window.openResMenu = (event, id, date, time) => {
+            activeResData = { id, date, time, type: 'reservation' };
+            actionModal.classList.add('active');
+            actionModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
+        window.openEventMenu = (id) => {
+            const ev = lastEventsSnapshot.find(e => e.id === id);
+            if (ev) {
+                activeResData = { id, type: 'event' };
+                document.getElementById('action-modal-title').textContent = 'EVENT COMMAND';
+                actionModal.classList.add('active');
+            }
+        };
+
+        window.confirmStatusUpdate = async (status) => {
+            if (activeResData && activeResData.type === 'reservation') {
+                await ResManager.updateStatus(activeResData.id, status);
+                actionModal.classList.remove('active');
+            }
+        };
+
+        openEditBtn.onclick = () => {
+            actionModal.classList.remove('active');
+            const data = activeResData;
+            window.openEditModal(data.id, data.date, data.time, data.type);
+        };
+
+        actionCloseBtn.onclick = () => {
+            actionModal.classList.remove('active');
+            document.getElementById('action-modal-title').textContent = 'COMMAND OPTIONS';
+        };
+
+        window.openEditModal = (id, date, time, type = 'reservation') => {
+            currentEditingId = id;
+            activeResData = { id, date, time, type }; // Track type globally
+            
+            const isRes = type === 'reservation';
+            const resFields = document.getElementById('edit-fields-res');
+            const evFields = document.getElementById('edit-fields-ev');
+
+            if (isRes) {
+                resFields.classList.remove('hidden');
+                evFields.classList.add('hidden');
+                editDateInput.value = date;
+                editTimeInput.value = time;
+            } else {
+                resFields.classList.add('hidden');
+                evFields.classList.remove('hidden');
+                document.getElementById('edit-panel-title').textContent = 'Update Event Details';
+                
+                const ev = lastEventsSnapshot.find(e => e.id === id);
+                document.getElementById('edit-ev-title').value = ev.title || '';
+                document.getElementById('edit-ev-date').value = ev.date || '';
+                document.getElementById('edit-ev-start').value = ev.startTime || '';
+                document.getElementById('edit-ev-end').value = ev.endTime || '';
+                document.getElementById('edit-ev-public').value = ev.public !== false ? 'true' : 'false';
+                document.getElementById('edit-ev-internal').value = ev.internalNotes || '';
+                document.getElementById('edit-ev-public-notes').value = ev.publicNotes || '';
+            }
+
+            editModal.classList.add('active');
+            editModal.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+
+        saveEditBtn.onclick = async () => {
+            if (activeResData.type === 'reservation') {
+                const success = await ResManager.updateDetails(currentEditingId, editDateInput.value, editTimeInput.value);
+                if (success) { editModal.classList.remove('active'); }
+            } else {
+                // Update full event fields
+                const ev = lastEventsSnapshot.find(e => e.id === currentEditingId);
+                const data = {
+                    ...ev,
+                    title: document.getElementById('edit-ev-title').value,
+                    date: document.getElementById('edit-ev-date').value,
+                    startTime: document.getElementById('edit-ev-start').value,
+                    endTime: document.getElementById('edit-ev-end').value,
+                    public: document.getElementById('edit-ev-public').value === 'true',
+                    internalNotes: document.getElementById('edit-ev-internal').value,
+                    publicNotes: document.getElementById('edit-ev-public-notes').value
+                };
+                await EventManager.saveEvent(data, currentEditingId);
+                editModal.classList.remove('active');
+            }
+        };
+
+        document.getElementById('btn-delete-record').onclick = async () => {
+            const data = activeResData;
+            const typeLabel = data.type === 'reservation' ? 'RESERVATION' : 'EVENT';
+            if (confirm(`CRITICAL: Permanently purge this ${typeLabel} from the matrix?`)) {
+                if (data.type === 'reservation') {
+                    await ResManager.deleteReservation(data.id);
+                } else {
+                    await EventManager.deleteEvent(data.id);
+                }
+                editModal.classList.remove('active');
+                detailsViewContent.innerHTML = `<div class="details-empty"><p>RECORD PURGED</p></div>`;
+            }
+        };
+
+        closeModalBtn.onclick = () => editModal.classList.remove('active');
+
+        function renderBookingDates(tier) {
+            const dates = MemberPortal.getBookingWindow(tier);
+            dateGrid.innerHTML = '';
+            dates.forEach(dateStr => {
+                const [day, ...rest] = dateStr.split(',');
+                const datePart = rest.join(',').trim();
+                const card = document.createElement('div');
+                card.className = 'date-card';
+                card.innerHTML = `<span class="day">${day.trim()}</span><span class="date">${datePart}</span>`;
+                dateGrid.appendChild(card);
+            });
+        }
+
+        const googleIcon = document.querySelector('.btn-google svg').outerHTML;
+
+        loginBtn.addEventListener('click', async () => {
+            loginBtn.disabled = true; loginBtn.innerHTML = "Authenticating...";
+            try {
+                const { user, profile } = await AuthManager.loginWithGoogle();
+                updateUI(user, profile);
+            } catch (error) {
+                loginBtn.innerHTML = `${googleIcon} Access Denied`;
+            } finally {
+                loginBtn.disabled = false;
+            }
+        });
+
+        logoutBtn.onclick = async () => { await AuthManager.logout(); location.reload(); };
+
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js";
+        const auth = getAuth();
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                const profile = await AuthManager.getOrCreateProfile(user);
+                updateUI(user, profile);
+            }
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP League Schedule Widget</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: transparent;
+        }
+
+        .league-widget {
+            background: linear-gradient(135deg, #1a1d29 0%, #0f111a 100%);
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .widget-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+
+        .widget-title {
+            color: #C5B358;
+            font-size: 1.3rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .date-display {
+            color: #8b9bb4;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .division-section {
+            margin-bottom: 25px;
+        }
+
+        .division-header {
+            color: #05d9e8;
+            font-size: 1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 0;
+            margin-bottom: 12px;
+            border-bottom: 2px solid #333;
+        }
+
+        .match-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .match-card {
+            background: #1a1d29;
+            border: 1px solid #333;
+            border-left: 4px solid #444;
+            border-radius: 8px;
+            padding: 12px 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease;
+        }
+
+        .match-card:hover {
+            transform: translateX(3px);
+        }
+
+        .match-card.active {
+            border-left-color: #00ff9d;
+        }
+
+        .match-card.pending {
+            border-left-color: #C5B358;
+        }
+
+        .table-number {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: white;
+            min-width: 40px;
+            text-align: center;
+            padding-right: 12px;
+            border-right: 1px solid #333;
+        }
+
+        .match-info {
+            flex-grow: 1;
+            padding-left: 15px;
+        }
+
+        .teams {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: white;
+            line-height: 1.3;
+        }
+
+        .vs {
+            color: #666;
+            font-style: italic;
+            font-size: 0.8rem;
+            font-weight: normal;
+        }
+
+        .match-status {
+            text-align: right;
+            min-width: 90px;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-playing {
+            background: rgba(0, 255, 157, 0.15);
+            color: #00ff9d;
+            border: 1px solid #00ff9d;
+            animation: blink 2s infinite;
+        }
+
+        .status-scheduled {
+            background: rgba(197, 179, 88, 0.15);
+            color: #C5B358;
+            border: 1px solid #C5B358;
+        }
+
+        .loading-state,
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .last-update {
+            text-align: center;
+            color: #00ff9d;
+            font-size: 0.7rem;
+            font-family: monospace;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+            opacity: 0.7;
+        }
+
+        @keyframes blink {
+            0% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.6;
+            }
+
+            100% {
+                opacity: 1;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .league-widget {
+                padding: 15px;
+            }
+
+            .widget-title {
+                font-size: 1.1rem;
+            }
+
+            .table-number {
+                font-size: 1.2rem;
+                min-width: 35px;
+            }
+
+            .teams {
+                font-size: 0.85rem;
+            }
+
+            .status-badge {
+                font-size: 0.65rem;
+                padding: 4px 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="league-widget">
+        <div class="widget-header">
+            <div class="widget-title">🎱 League Schedule</div>
+            <div class="date-display" id="dateDisplay">Loading...</div>
+        </div>
+
+        <div id="scheduleContainer">
+            <div class="loading-state">Connecting to VIP Cloud...</div>
+        </div>
+
+        <div class="last-update" id="lastUpdate">Initializing...</div>
+    </div>
+
+    <script>
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbw2pC9KPL39Z4vlYNfV1kA44QImd4GaTuJDUBybR-xCQ9G59bTFe7sqn3IJVO2qVGNXRg/exec";
+
+        // Tell the parent page how tall we are so the iframe resizes automatically
+        function notifyHeight() {
+            const height = document.body.scrollHeight;
+            window.parent.postMessage({ type: 'leagueViewerHeight', height: height }, '*');
+        }
+
+        async function fetchLeagueData() {
+            try {
+                const response = await fetch(CLOUD_URL + "?action=getLiveState&t=" + Date.now());
+                const data = await response.json();
+                renderSchedule(data);
+            } catch (e) {
+                console.error("League Widget Error:", e);
+                document.getElementById('scheduleContainer').innerHTML =
+                    '<div class="empty-state">Unable to load schedule. Please refresh.</div>';
+                notifyHeight();
+            }
+        }
+
+        function renderSchedule(data) {
+            const container = document.getElementById('scheduleContainer');
+            const dateDisp = document.getElementById('dateDisplay');
+
+            dateDisp.textContent = new Date().toLocaleDateString('en-US', {
+                weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
+            });
+
+            let allMatches = [];
+
+            // Active tables
+            for (let i = 1; i <= 17; i++) {
+                const table = data.tables[i.toString()];
+                const leaguePlayer = table?.players?.find(p => p.rateType === 'league');
+
+                if (leaguePlayer) {
+                    const teams = table.players.length >= 2
+                        ? `${table.players[0].name} <span class="vs">vs</span> ${table.players[1].name}`
+                        : table.players[0].name;
+
+                    allMatches.push({
+                        id: i,
+                        division: leaguePlayer.division || "Active League",
+                        teams: teams,
+                        status: "PLAYING NOW",
+                        type: "active"
+                    });
+                }
+            }
+
+            // Scheduled matches
+            if (data.schedule && data.schedule.length > 0) {
+                data.schedule.forEach(match => {
+                    allMatches.push({
+                        id: match.tableId,
+                        division: match.division || "Upcoming League",
+                        teams: `${match.team1} <span class="vs">vs</span> ${match.team2}`,
+                        status: match.timeLabel || "Upcoming",
+                        type: "pending"
+                    });
+                });
+            }
+
+            if (allMatches.length === 0) {
+                container.innerHTML = '<div class="empty-state">No league matches currently scheduled</div>';
+                updateTimestamp();
+                notifyHeight();
+                return;
+            }
+
+            // Group by division
+            const divisions = {};
+            allMatches.sort((a, b) => a.id - b.id).forEach(match => {
+                if (!divisions[match.division]) divisions[match.division] = [];
+                divisions[match.division].push(match);
+            });
+
+            let html = '';
+            for (const [divisionName, matches] of Object.entries(divisions)) {
+                html += `<div class="division-section">`;
+                html += `<div class="division-header">${divisionName}</div>`;
+                html += `<div class="match-list">`;
+
+                matches.forEach(match => {
+                    const statusClass = match.type === 'active' ? 'status-playing' : 'status-scheduled';
+                    html += `
+                        <div class="match-card ${match.type}">
+                            <div class="table-number">${match.id}</div>
+                            <div class="match-info">
+                                <div class="teams">${match.teams}</div>
+                            </div>
+                            <div class="match-status">
+                                <div class="status-badge ${statusClass}">${match.status}</div>
+                            </div>
+                        </div>`;
+                });
+
+                html += `</div></div>`;
+            }
+
+            container.innerHTML = html;
+            updateTimestamp();
+
+            // Small delay lets the DOM paint before we measure
+            setTimeout(notifyHeight, 100);
+        }
+
+        function updateTimestamp() {
+            document.getElementById('lastUpdate').textContent =
+                'Updated: ' + new Date().toLocaleTimeString();
+        }
+
+        fetchLeagueData();
+        setInterval(fetchLeagueData, 60000);
+    </script>
+</body>
+
+</html>

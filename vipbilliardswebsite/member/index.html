@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Members — VIP Billiards</title>
+    <link rel="icon" type="image/png" href="https://vipbilliardsinc.com/images/VIPLogo.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cinzel:wght@700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300&family=DM+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="member.css">
+    <!-- Firebase -->
+    <script type="importmap">
+    {
+        "imports": {
+            "firebase/app": "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js",
+            "firebase/auth": "https://www.gstatic.com/firebasejs/11.10.0/firebase-auth.js",
+            "firebase/firestore": "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js"
+        }
+    }
+    </script>
+</head>
+
+<body>
+    <div class="app">
+
+        <!-- SETTINGS BACKDROP -->
+        <div class="settings-backdrop" id="settingsBackdrop"></div>
+
+        <!-- SETTINGS PANEL -->
+        <div class="settings-panel" id="settingsPanel">
+            <div class="settings-header">
+                <div class="settings-title">MY ACCOUNT</div>
+                <button class="btn-close-panel" id="btnCloseSettings">✕</button>
+            </div>
+            <div class="settings-body">
+
+                <!-- Profile (read-only from Google) -->
+                <div>
+                    <div class="settings-section-title">Profile</div>
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsName">Full Name</label>
+                        <input class="settings-input" id="settingsName" type="text" placeholder="Your Name">
+                    </div>
+                    <div class="settings-field">
+                        <label class="settings-label">Email</label>
+                        <div class="settings-read-only" id="settingsEmail">—</div>
+                    </div>
+                    <div class="settings-field">
+                        <label class="settings-label">Member Since</label>
+                        <div class="settings-read-only" id="settingsJoined">—</div>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Contact (editable) -->
+                <div>
+                    <div class="settings-section-title">Contact & Notifications</div>
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsPhone">Mobile Phone</label>
+                        <input class="settings-input" id="settingsPhone" type="tel" placeholder="(631) 555-1234"
+                            maxlength="14">
+                    </div>
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsCarrier">Mobile Carrier</label>
+                        <select class="settings-select" id="settingsCarrier">
+                            <option value="">Select carrier...</option>
+                            <option value="att">AT&T</option>
+                            <option value="tmobile">T-Mobile</option>
+                            <option value="verizon">Verizon</option>
+                            <option value="sprint">Sprint</option>
+                            <option value="boost">Boost Mobile</option>
+                            <option value="cricket">Cricket Wireless</option>
+                            <option value="metro">Metro by T-Mobile</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Preferences -->
+                <div>
+                    <div class="settings-section-title">Preferences</div>
+                    <div class="settings-field">
+                        <label class="settings-label" for="settingsFavTable">My Preferred Table Today</label>
+                        <select class="settings-select" id="settingsFavTable">
+                            <option value="">No Preference</option>
+                            <option value="1">Table 1 - 9' Diamond Table (Front of Room)</option>
+                            <option value="2">Table 2 - 9' Brunswick Gold Crown Table</option>
+                            <option value="3">Table 3 - 9' Brunswick Gold Crown Table</option>
+                            <option value="4">Table 4 - 9' Brunswick Gold Crown Table</option>
+                            <option value="5">Table 5 - 9' Brunswick Gold Crown Table</option>
+                            <option value="6">Table 6 - 9' Brunswick Gold Crown Table</option>
+                            <option value="7">Table 7 - 9' Brunswick Gold Crown Table</option>
+                            <option value="8">Table 8 - 9' Brunswick Gold Crown Table</option>
+                            <option value="9">Table 9 - 9' Brunswick Gold Crown Table</option>
+                            <option value="10">Table 10 - 7' Bar Table (By Pool Counter)</option>
+                            <option value="11">Table 11 - 7' Bar Table (Between Table 1 and Table 10)</option>
+                            <option value="12">Table 12 - 7' Bar Table (Across from Bar)</option>
+                            <option value="13">Table 13 - 7' Bar Table </option>
+                            <option value="14">Table 14 - 7' Bar Table</option>
+                            <option value="15">Table 15 - 7' Bar Table</option>
+                            <option value="16">Table 16 - 7' Bar Table</option>
+                            <option value="17">Table 17 - 7' Bar Table (Last Table in Row)</option>
+                        </select>
+                        <div class="vip-only-badge orange js-hidden" id="favTableVipBadge">★ VIP FEATURE</div>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Security -->
+                <div id="securitySection">
+                    <div class="settings-section-title">Security</div>
+                    <div class="settings-field">
+                        <label class="settings-label">Password Management</label>
+                        <button class="btn-onboarding-secondary btn-full-width" id="btnUpdatePassword">
+                            RESET PASSWORD BY EMAIL
+                        </button>
+                        <div class="settings-help-text">
+                            We will send a secure link to reset your password to your registered email address.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-divider"></div>
+
+                <!-- Membership -->
+                <div>
+                    <div class="settings-section-title">Membership</div>
+                    <div class="settings-field">
+                        <label class="settings-label">Current Tier</label>
+                        <div class="settings-read-only" id="settingsTier">—</div>
+                    </div>
+                    <div class="settings-field js-hidden" id="billingSection">
+                        <label class="settings-label">Billing & Subscription</label>
+                        <a href="https://billing.stripe.com/p/login/14A3cn0WMcWQfV44uAf7i00" target="_blank" rel="noopener"
+                            class="btn-onboarding-secondary btn-full-width btn-billing-stripe">
+                            💳 MANAGE BILLING ON STRIPE
+                        </a>
+                        <div class="settings-help-text">
+                            Update your payment method or cancel your VIP membership through Stripe's secure portal.
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-save-settings" id="btnSaveSettings">SAVE CHANGES</button>
+                <div class="save-confirm" id="saveConfirm">✓ Changes saved</div>
+
+            </div>
+        </div>
+
+        <!-- AUTH SCREEN -->
+        <!-- AUTH REDIRECT (Handled by JS) -->
+        <div id="authScreen" class="js-hidden"></div>
+
+        <!-- MEMBER APP -->
+        <div id="memberApp">
+            <div class="app-header">
+                <div class="header-brand">
+                    <img src="https://vipbilliardsinc.com/images/VIPLogo.png" alt="VIP" class="header-logo">
+                    <div class="header-name">VIP MEMBERS</div>
+                </div>
+                <button class="btn-settings" id="btnSettings">⚙ Account</button>
+                <button class="btn-signout" id="btnSignOut">Sign Out</button>
+            </div>
+
+            <div class="scroll-container">
+
+                <!-- LOADING -->
+                <div id="loadingState" class="loading-state">
+                    <div class="loading-spinner"></div>
+                    Loading your membership...
+                </div>
+
+                <!-- HERO CARD -->
+                <div class="hero-card js-hidden" id="heroCard">
+                    <div class="member-greeting">Welcome back</div>
+                    <div class="member-name" id="memberName">—</div>
+                    <div id="favTableDisplay" class="fav-table-hero js-hidden">PREFERRED TABLE TODAY: <span>—</span>
+                    </div>
+                    <div id="tierBadge"></div>
+                    <div class="hero-stats">
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Lifetime Hours</div>
+                            <div class="hero-stat-value gold" id="lifetimeHours">0</div>
+                        </div>
+                        <div class="hero-stat">
+                            <div class="hero-stat-label">Member Since</div>
+                            <div class="hero-stat-value" id="memberSince">—</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reserve-card js-hidden" id="reserveCard">
+                    <div class="reserve-ball-deco">🎱</div>
+                    <div class="reserve-headline">READY TO PLAY?</div>
+                    <div class="reserve-sub" id="reserveSub">Book your table at VIP Billiards.</div>
+                    <div id="reserveContent"></div>
+                </div>
+
+                <!-- POINTS CARD -->
+                <div class="points-card js-hidden" id="pointsCard">
+                    <div class="card-label">VIP Points</div>
+
+                    <!-- PRO TIER POINTS -->
+                    <div id="proPoints">
+                        <div class="points-ring-wrap">
+                            <div class="ring-container">
+                                <svg class="ring-svg" viewBox="0 0 120 120">
+                                    <circle class="ring-track" cx="60" cy="60" r="50" />
+                                    <circle class="ring-fill pro" id="ringFill" cx="60" cy="60" r="50" />
+                                </svg>
+                                <div class="ring-center">
+                                    <div class="ring-pts pro" id="pointsDisplay">0</div>
+                                    <div class="ring-label">VIP PTS</div>
+                                </div>
+                            </div>
+                            <div class="points-info">
+                                <div class="points-headline" id="pointsHeadline">KEEP PLAYING</div>
+                                <div class="points-sub" id="pointsSub">Earn 5 points per $1 spent. Redeem 900 points for
+                                    a
+                                    free hour of pool.</div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill" id="progressBar"></div>
+                                </div>
+                                <div class="progress-label" id="progressLabel">0 / 900 points to free hour</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FREE TIER SHADOW POINTS -->
+                    <div id="freePoints" class="js-hidden">
+                        <div class="points-ring-wrap">
+                            <div class="ring-container">
+                                <svg class="ring-svg" viewBox="0 0 120 120">
+                                    <circle class="ring-track" cx="60" cy="60" r="50" />
+                                    <circle class="ring-fill shadow" id="shadowRingFill" cx="60" cy="60" r="50" />
+                                </svg>
+                                <div class="ring-center">
+                                    <div class="ring-pts shadow" id="shadowDisplay">0</div>
+                                    <div class="ring-label ring-label-locked">LOCKED</div>
+                                </div>
+                            </div>
+                            <div class="points-info">
+                                <div class="points-headline points-headline-locked">POINTS LOCKED</div>
+                                <div class="points-sub points-sub-locked">You would have earned <strong id="shadowCount"
+                                        class="shadow-count">0 points</strong> as a VIP member.</div>
+                                <div class="progress-bar-wrap">
+                                    <div class="progress-bar-fill progress-bar-shadow" id="shadowBar"></div>
+                                </div>
+                                <div class="progress-label progress-label-locked" id="shadowProgressLabel">0 / 900 to
+                                    free hour</div>
+                                <div class="vip-only-note">
+                                    * Points can only be redeemed by VIP members
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Upgrade nudge removed for unified Free VIP model -->
+                    </div>
+                </div>
+
+                <!-- CROWD METER SECTION -->
+                <div class="section-card crowd-section" id="crowdCard">
+                    <div class="crowd-header">
+                        <div class="card-label">Live Crowd Meter</div>
+                        <div class="crowd-count" id="activeCount">0/17 Tables</div>
+                    </div>
+
+                    <div class="heat-scale" id="heatScale"></div>
+
+                    <div class="crowd-status-bar">
+                        <span class="status-label-text">Vibe Check:</span>
+                        <span class="status-message" id="statusLabel">Loading...</span>
+                    </div>
+
+                    <div class="crowd-updated" id="lastUpdate">Connecting...</div>
+                </div>
+
+                <div id="sameDayContainer" class="same-day-container">
+                    <button id="btnSameDayArrival" class="btn-sameday" onclick="window.openSameDayModal()">
+                        I'M HEADING THERE NOW!
+                    </button>
+                    <div id="sameDayStatus" class="same-day-status">
+                        Adding you to the queue...
+                    </div>
+                </div>
+
+                <!-- RESERVATION CARD -->
+                <div class="section-card js-hidden" id="reservationCard">
+                    <div class="card-label">Your Reservation</div>
+                    <div id="reservationContent">
+                        <div class="no-res">No upcoming reservations.</div>
+                    </div>
+                </div>
+
+                <!-- HISTORY CARD -->
+                <div class="section-card js-hidden" id="historyCard">
+                    <div class="card-label">Play History</div>
+                    <div id="historyContent">
+                        <div class="empty-history">No sessions yet. Come play! 🎱</div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- RESERVATION MODAL -->
+        <div class="res-modal-backdrop" id="resModalBackdrop">
+            <div class="res-modal" id="resModal">
+                <div class="res-modal-handle"></div>
+                <div class="res-modal-header pos-relative">
+                    <button id="btnForceCloseRes" class="btn-close-abs">✕</button>
+                    <div class="res-modal-title" id="resModalTitle">PICK A DATE</div>
+                    <div class="res-modal-step" id="resModalStep">Step 1 of 4</div>
+                </div>
+                <div class="res-modal-body" id="resModalBody">
+                </div>
+                <div class="res-modal-footer" id="resModalFooter">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SAME DAY ARRIVAL MODAL (ETA & PREFERENCE) -->
+        <div class="res-modal-backdrop" id="sameDayModalBackdrop">
+            <div class="res-modal" id="sameDayModal">
+                <div class="res-modal-handle"></div>
+                <div class="res-modal-header pos-relative">
+                    <button class="btn-close-abs" onclick="closeSameDayModal()">✕</button>
+                    <div class="res-modal-title">HEADING THERE NOW</div>
+                </div>
+
+                <div class="res-modal-body">
+                    <div class="res-option-group">
+                        <div class="res-option-label">Estimated Arrival</div>
+                        <div class="eta-buttons-container">
+                            <button class="res-option-btn eta-btn selected" data-eta-text="I'm Already Here">I'M ALREADY
+                                HERE</button>
+                            <button class="res-option-btn eta-btn" data-eta-text="I'll be there within the Hour">I'LL BE
+                                THERE WITHIN THE HOUR</button>
+                            <button class="res-option-btn eta-btn" data-eta-text="Not sure, but coming today">NOT SURE,
+                                BUT COMING TODAY</button>
+                        </div>
+                    </div>
+
+                    <div class="res-option-group">
+                        <label class="res-option-label" for="sameDayTablePref">Table Preference</label>
+                        <select id="sameDayTablePref" class="settings-select same-day-table-select"
+                            title="Table Preference">
+                            <option value="No Preference">No Preference</option>
+                            <option value="1">Table 1 - 9' Diamond Table (Front of Room)</option>
+                            <option value="2">Table 2 - 9' Brunswick Gold Crown Table</option>
+                            <option value="3">Table 3 - 9' Brunswick Gold Crown Table</option>
+                            <option value="4">Table 4 - 9' Brunswick Gold Crown Table</option>
+                            <option value="5">Table 5 - 9' Brunswick Gold Crown Table</option>
+                            <option value="6">Table 6 - 9' Brunswick Gold Crown Table</option>
+                            <option value="7">Table 7 - 9' Brunswick Gold Crown Table</option>
+                            <option value="8">Table 8 - 9' Brunswick Gold Crown Table</option>
+                            <option value="9">Table 9 - 9' Brunswick Gold Crown Table</option>
+                            <option value="10">Table 10 - 7' Bar Table (By Pool Counter)</option>
+                            <option value="11">Table 11 - 7' Bar Table (Between Table 1 and Table 10)</option>
+                            <option value="12">Table 12 - 7' Bar Table (Across from Bar)</option>
+                            <option value="13">Table 13 - 7' Bar Table</option>
+                            <option value="14">Table 14 - 7' Bar Table</option>
+                            <option value="15">Table 15 - 7' Bar Table</option>
+                            <option value="16">Table 16 - 7' Bar Table</option>
+                            <option value="17">Table 17 - 7' Bar Table (Last Table in Row)</option>
+                        </select>
+                    </div>
+
+                    <div class="res-phone-notice same-day-notice">
+                        Staff will hold your spot based on your ETA.
+                        If you are late, your spot may be forfeited.
+                    </div>
+                </div>
+                <div class="res-modal-footer">
+                    <button class="btn-modal-submit" id="btnConfirmArrival">SEND ARRIVAL ALERT</button>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div><!-- /.app -->
+
+    <script type="module">
+        import { initializeApp } from 'firebase/app';
+        import { getAuth, signOut, onAuthStateChanged, sendPasswordResetEmail } from 'firebase/auth';
+        import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs, query, where, orderBy, limit, addDoc, onSnapshot, or } from
+            'firebase/firestore';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyATn_LRrT14QeRp7primG0dK82pcj7I_K0",
+            authDomain: "vip-reservations.firebaseapp.com",
+            projectId: "vip-reservations",
+            storageBucket: "vip-reservations.firebasestorage.app",
+            messagingSenderId: "721372947742",
+            appId: "1:721372947742:web:441d5efe90198dbef2550f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ── CONFIG FLAG ──
+        const MEMBERSHIP_MODE = 'freeVIP'; // 'legacy' or 'freeVIP'
+
+        // ── AUTH ──
+        document.getElementById('btnSignOut').addEventListener('click', () => {
+            signOut(auth);
+        });
+
+        document.getElementById('btnUpdatePassword').addEventListener('click', async () => {
+            if (!currentUser || !currentUser.email) return;
+            try {
+                await sendPasswordResetEmail(auth, currentUser.email);
+                alert("Password reset email sent to " + currentUser.email + ". Please check your inbox.");
+            } catch (error) {
+                console.error("Reset Error:", error);
+                alert("Error sending reset email: " + error.message);
+            }
+        });
+
+        onAuthStateChanged(auth, async user => {
+            if (user) {
+                document.getElementById('memberApp').style.display = 'block';
+                await loadMemberData(user);
+
+                // Check for Stripe Success on Page Load AFTER member data is loaded
+                const urlParams = new URLSearchParams(window.location.search);
+                if (urlParams.get('upgrade') === 'success') {
+                    handleVIPUpgrade();
+                }
+            } else {
+                // Not logged in -> redirect to login gateway
+                window.location.href = 'login.html' + window.location.search;
+            }
+        });
+
+        // ── LOAD MEMBER DATA (Real-time Listener) ──
+        function loadMemberData(user) {
+            const memberRef = doc(db, 'members', user.uid);
+
+            // Convert to real-time listener so stats update instantly when staff closes session
+            onSnapshot(memberRef, (memberSnap) => {
+                if (!memberSnap.exists()) {
+                    // Auto-register new member with FREE tier
+                    const emailKey = user.email.toLowerCase().trim().replace(/[\/\.]/g, '-');
+                    const newMember = {
+                        uid: user.uid,
+                        email: user.email.toLowerCase().trim(),
+                        emailKey: emailKey,
+                        name: user.displayName || user.email.split('@')[0] || 'VIP Member',
+                        tier: 'PRO',
+                        joinedDate: new Date().toISOString(),
+                        phone: '',
+                        mobileCarrier: '',
+                        loyaltyPoints: 0,
+                        shadowPoints: 0,
+                        lifetimeHours: 0,
+                        lastReservationMonth: null,
+                        reservationCountThisMonth: 0
+                    };
+                    setDoc(memberRef, newMember);
+                    console.log('✓ New member registered:', user.email);
+                    return; // Re-triggered by listener after setDoc
+                }
+
+                const member = memberSnap.data();
+                const isPro = member.tier === 'PRO' || member.tier === 'PAID';
+                window.isProMember = isPro;
+
+                currentMemberRef = memberRef;
+                currentUser = user;
+
+                // Update UI
+                document.getElementById('loadingState').classList.add('js-hidden');
+                document.getElementById('heroCard').classList.remove('js-hidden');
+                document.getElementById('pointsCard').classList.remove('js-hidden');
+                document.getElementById('reserveCard').classList.remove('js-hidden');
+                document.getElementById('reservationCard').classList.remove('js-hidden');
+                document.getElementById('historyCard').classList.remove('js-hidden');
+
+                document.getElementById('memberName').textContent = member.name || user.displayName || 'Member';
+
+                const favDisplay = document.getElementById('favTableDisplay');
+                if (favDisplay) {
+                    if (isPro && member.favoriteTable) {
+                        favDisplay.classList.remove('js-hidden');
+                        favDisplay.querySelector('span').textContent = `Table ${member.favoriteTable}`;
+                    } else {
+                        favDisplay.classList.add('js-hidden');
+                    }
+                }
+
+                const joinDate = member.joinedDate
+                    ? new Date(member.joinedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
+                    : '—';
+                document.getElementById('memberSince').textContent = joinDate;
+                document.getElementById('lifetimeHours').textContent = (member.lifetimeHours || 0).toFixed(1) + 'h';
+
+                if (isPro) {
+                    document.getElementById('tierBadge').innerHTML = `<div class="tier-badge pro"><div class="tier-dot"></div>VIP MEMBER</div>`;
+                    document.getElementById('proPoints').classList.remove('js-hidden');
+                    document.getElementById('freePoints').classList.add('js-hidden');
+                    renderProPoints(member.loyaltyPoints || 0);
+                } else {
+                    document.getElementById('tierBadge').innerHTML = `<div class="tier-badge free">FREE MEMBER</div>`;
+                    document.getElementById('proPoints').classList.add('js-hidden');
+                    document.getElementById('freePoints').classList.remove('js-hidden');
+                    renderShadowPoints(member.shadowPoints || 0);
+                }
+
+                // Hide security for google users
+                const isGoogle = user.providerData.some(p => p.providerId === 'google.com');
+                document.getElementById('securitySection').classList.toggle('js-hidden', isGoogle);
+
+                populateSettings(member, user);
+                renderReserveCard(member);
+                loadReservation(member.email, user.uid, member);
+                loadLedger(memberRef, isPro);
+            }, (err) => {
+                console.error('Member listener error:', err);
+                document.getElementById('loadingState').innerHTML = '<div class="error-msg">Error loading data. Please try again.</div>';
+            });
+        }
+
+        // ── PRO POINTS RING ──
+        function renderProPoints(points) {
+            const MAX = 900;
+            const pct = Math.min(points / MAX, 1);
+            const circumference = 314;
+            const offset = circumference - (pct * circumference);
+
+            document.getElementById('pointsDisplay').textContent = points;
+            document.getElementById('progressLabel').textContent = `${points} / ${MAX} points to free hour`;
+
+            // Animate ring and bar
+            setTimeout(() => {
+                const ring = document.getElementById('ringFill');
+                if (ring) ring.style.strokeDashoffset = offset;
+                const bar = document.getElementById('progressBar');
+                if (bar) bar.style.width = (pct * 100) + '%';
+            }, 300);
+
+            // Headline
+            if (points >= MAX) {
+                document.getElementById('pointsHeadline').textContent = 'FREE HOUR READY!';
+                document.getElementById('pointsSub').textContent = 'You\'ve earned a free hour. Ask staff to redeem.';
+            } else if (points === 0) {
+                document.getElementById('pointsHeadline').textContent = 'START EARNING';
+                document.getElementById('pointsSub').textContent = 'Earn 5 points for every $1 spent.';
+            } else if (MAX - points <= 45) { // Less than $9 (1hr) worth of points
+                document.getElementById('pointsHeadline').textContent = 'ALMOST THERE!';
+                document.getElementById('pointsSub').textContent = 'You\'re close to your next free hour. 🎱';
+            } else {
+                const remaining = MAX - points;
+                document.getElementById('pointsHeadline').textContent = `${remaining} PTS TO FREE POOL`;
+                document.getElementById('pointsSub').textContent = 'Keep playing — loyalty pays off with every game.';
+            }
+        }
+
+        // ── SHADOW POINTS (FREE TIER) ──
+        function renderShadowPoints(shadow) {
+            const MAX = 900;
+            const pct = Math.min(shadow / MAX, 1);
+
+            document.getElementById('shadowDisplay').textContent = shadow;
+            document.getElementById('shadowCount').textContent = shadow + ' points';
+            document.getElementById('shadowMissed').textContent = shadow + ' pts';
+            document.getElementById('shadowProgressLabel').textContent = `${shadow} / ${MAX} to free hour`;
+
+            setTimeout(() => {
+                const bar = document.getElementById('shadowBar');
+                if (bar) bar.style.width = (pct * 100) + '%';
+            }, 300);
+        }
+
+        // ── RESERVATION ──
+        let reservationUnsubscribe = null;
+
+        function loadReservation(email, uid, member) {
+            const container = document.getElementById('reservationContent');
+            if (reservationUnsubscribe) reservationUnsubscribe();
+
+            const targetEmail = (email || '').toLowerCase().trim();
+            const resRef = collection(db, 'reservations');
+
+            console.log(`[Res] Loading reservations for ${targetEmail} (UID: ${uid})`);
+
+            // Use OR to find by email (lowercased), original email, OR UID
+            // Removed orderBy to avoid requiring complex composite indexes in Firestore
+            const q = query(
+                resRef,
+                or(
+                    where('memberEmail', '==', targetEmail),
+                    where('memberEmail', '==', email || ''),
+                    where('uid', '==', uid || '')
+                )
+            );
+
+            reservationUnsubscribe = onSnapshot(q, (snap) => {
+                console.log(`[Res] Found ${snap.docs.length} total records.`);
+
+                const now = new Date();
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                // Filter for active statuses AND sort by time in memory (bypasses index requirement)
+                const activeRes = snap.docs
+                    .map(d => ({ id: d.id, ...d.data() }))
+                    .sort((a, b) => new Date(a.reservationTime) - new Date(b.reservationTime))
+                    .filter(res => {
+                        const s = (res.status || 'PENDING').toUpperCase();
+                        const isActiveStatus = ['PENDING', 'ARRIVED'].includes(s);
+
+                        // If ARRIVED, we always want to show it
+                        if (s === 'ARRIVED') return true;
+
+                        // If PENDING, only show if it's for today or the future
+                        const resDate = new Date(res.reservationTime);
+                        return isActiveStatus && resDate >= today;
+                    });
+
+                console.log(`[Res] ${activeRes.length} active/future reservations.`);
+
+                renderSDASection(member, activeRes);
+                // ------------------------------------------------------------------------
+
+                if (activeRes.length === 0) {
+                    container.innerHTML = '<div class="no-res">No upcoming reservations.<br><br>Book your table below.</div>';
+                    return;
+                }
+
+                // Cache the data so edit buttons can find it (Moved outside the loop for efficiency)
+                window.userActiveReservations = activeRes;
+
+                // Render all active reservations
+                container.innerHTML = activeRes.map(res => {
+                    // Format Date and Time
+                    const d = new Date(res.reservationTime);
+                    const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }).toUpperCase();
+                    const timeStr = d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+                    // Build and RETURN the Compact Segmented Row
+                    return `
+                    <div class="res-row-segmented">
+                        
+                        <div class="seg-datetime">
+                            <span class="seg-date">${dateStr}</span>
+                            <span class="seg-time">${timeStr}</span>
+                        </div>
+
+                        <div class="seg-details">
+                            <div class="seg-badge">👥 ${res.peopleCount} PPL</div>
+                            <div class="seg-badge">🎱 ${res.tableType.toUpperCase()}</div>
+                        </div>
+
+                        <div class="seg-action-block block-status ${res.status === 'PENDING' ? 'status-pending' : 'status-arrived'}">
+                            ${res.status}
+                        </div>
+                        
+                        ${res.status === 'PENDING' ? `
+                            <button class="seg-action-block block-modify" onclick="window.editReservation('${res.id}')">MODIFY</button>
+                            <button class="seg-action-block block-cancel" onclick="window.cancelReservation('${res.id}', this)">CANCEL</button>
+                        ` : ''}
+
+                        ${res.tableNumber ? `
+                            <div class="seg-action-block block-table">TABLE ${res.tableNumber}</div>
+                        ` : ''}
+                        
+                    </div>
+                    `;
+                }).join('');
+            }, (e) => {
+                console.error('loadReservation listener error:', e);
+                container.innerHTML = '<div class="no-res">Could not load reservation data.</div>';
+            });
+        }
+
+        // ── LOYALTY LEDGER ──
+        async function loadLedger(memberRef, isPro) {
+            const container = document.getElementById('historyContent');
+            try {
+                const ledgerRef = collection(memberRef, 'loyalty_ledger');
+                const ledgerSnap = await getDocs(query(ledgerRef, orderBy('date', 'desc'), limit(20)));
+
+                if (ledgerSnap.empty) {
+                    container.innerHTML = '<div class="empty-history">No sessions yet. Come play! 🎱</div>';
+                    return;
+                }
+
+                let html = '<div class="history-list">';
+                ledgerSnap.forEach(d => {
+                    const entry = d.data();
+                    const date = new Date(entry.date).toLocaleDateString('en-US', {
+                        month: 'short', day: 'numeric', year: 'numeric'
+                    });
+
+                    // 1. Identify the transaction type and amounts
+                    const isShadow = entry.type === 'SHADOW';
+                    const earned = entry.points || 0;
+
+                    // Support the new 'pointsRedeemed' field AND legacy 'REDEEM' tags
+                    const redeemed = entry.pointsRedeemed || (entry.type === 'REDEEM' ? earned : 0);
+
+                    // 2. Build the Points Display (Allows BOTH +Earned and -Redeemed to show!)
+                    let ptsHtml = '';
+                    if (isShadow) {
+                        ptsHtml = `<div class="history-pts shadow">+${earned} (locked)</div>`;
+                    } else {
+                        if (redeemed > 0) {
+                            ptsHtml += `<div class="history-pts redeem inline-pts">-${redeemed} pts</div>`;
+                        }
+                        if (earned > 0 || redeemed === 0) {
+                            ptsHtml += `<div class="history-pts earn inline-pts">+${earned} pts</div>`;
+                        }
+                    }
+
+                    // 3. UI Styling
+                    const iconClass = isShadow ? 'shadow' : (redeemed > 0 ? 'redeem' : 'earn');
+                    const icon = isShadow ? '🔒' : (redeemed > 0 ? '🎉' : '🎱');
+                    const title = `Table ${entry.tableNumber || '—'}`;
+
+                    // 4. Safely grab the hours (Checking BOTH the new and legacy tags)
+                    const hrs = parseFloat(entry.hoursPlayed || entry.hours || 0).toFixed(1);
+
+                    html += `
+            <div class="history-item">
+                <div class="history-icon ${iconClass}">${icon}</div>
+                <div class="history-info">
+                    <div class="history-title">${title}</div>
+                    <div class="history-date">${date}</div>
+                </div>
+                <div class="text-right">
+                    <div class="white-nowrap mb-4">${ptsHtml}</div>
+                    <div class="history-hrs">
+                        Table ${entry.tableNumber || '?'} · ${hrs}h · $${(entry.amountPaid || 0).toFixed(2)}
+                    </div>
+                </div>
+            </div>`;
+                });
+                html += '</div>';
+
+                // If free tier, wrap in locked overlay
+                if (!isPro) {
+                    container.innerHTML = `<div class="locked-overlay">${html}</div>`;
+                } else {
+                    container.innerHTML = html;
+                }
+
+            } catch (e) {
+                console.error('loadLedger error:', e);
+                container.innerHTML = '<div class="empty-history">Could not load history.</div>';
+            }
+        }
+
+        // ── SETTINGS PANEL ──
+        let currentMemberRef = null;
+        let currentUser = null;
+
+        document.getElementById('btnSettings').addEventListener('click', openSettings);
+        document.getElementById('btnCloseSettings').addEventListener('click', closeSettings);
+        document.getElementById('settingsBackdrop').addEventListener('click', closeSettings);
+        document.getElementById('btnSaveSettings').addEventListener('click', saveSettings);
+
+        function openSettings() {
+            document.getElementById('settingsPanel').classList.add('open');
+            document.getElementById('settingsBackdrop').classList.add('active');
+        }
+
+        function closeSettings() {
+            document.getElementById('settingsPanel').classList.remove('open');
+            document.getElementById('settingsBackdrop').classList.remove('active');
+            document.getElementById('saveConfirm').classList.remove('visible');
+        }
+
+        function populateSettings(member, user) {
+            const isPro = member.tier === 'PRO' || member.tier === 'PAID';
+            document.getElementById('settingsName').value = member.name || user.displayName || '';
+            document.getElementById('settingsEmail').textContent = member.email || user.email || '—';
+            document.getElementById('settingsTier').textContent = isPro ? '⭐ VIP Member' : 'VIP Member';
+            document.getElementById('settingsJoined').textContent = member.joinedDate
+                ? new Date(member.joinedDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+                : '—';
+            document.getElementById('settingsPhone').value = member.phone || '';
+            document.getElementById('settingsCarrier').value = member.mobileCarrier || '';
+
+            // Billing Section (VIP Only)
+            const billingSection = document.getElementById('billingSection');
+            if (billingSection) billingSection.classList.toggle('js-hidden', !isPro);
+
+            // Favorite Table (VIP Only)
+            const favSelect = document.getElementById('settingsFavTable');
+            const favBadge = document.getElementById('favTableVipBadge');
+            if (favSelect) {
+                favSelect.value = member.favoriteTable || '';
+                if (isPro) {
+                    favSelect.disabled = false;
+                    favBadge.classList.add('js-hidden');
+                } else {
+                    favSelect.disabled = true;
+                    favBadge.classList.remove('js-hidden');
+                }
+            }
+        }
+
+        async function saveSettings() {
+            if (!currentMemberRef) return;
+            const name = document.getElementById('settingsName').value.trim();
+            const phone = document.getElementById('settingsPhone').value.trim();
+            const carrier = document.getElementById('settingsCarrier').value;
+            const favTable = document.getElementById('settingsFavTable').value;
+
+            if (!name) {
+                alert("Name cannot be empty.");
+                return;
+            }
+
+            try {
+                const updates = {
+                    name: name,
+                    phone: phone,
+                    mobileCarrier: carrier
+                };
+
+                // Only save favTable if they are PRO
+                if (window.isProMember) {
+                    updates.favoriteTable = favTable;
+                }
+
+                await updateDoc(currentMemberRef, updates);
+
+                // ── SYNC NAME TO PENDING RESERVATIONS ──
+                // This ensures the Staff HUD reflects the name change immediately
+                const currentUser = auth.currentUser;
+                if (currentUser) {
+                    try {
+                        const q = query(
+                            collection(db, 'reservations'),
+                            where('uid', '==', currentUser.uid),
+                            where('status', '==', 'PENDING')
+                        );
+                        const snap = await getDocs(q);
+                        const syncPromises = snap.docs.map(resDoc => updateDoc(resDoc.ref, {
+                            memberName: name
+                        }));
+                        await Promise.all(syncPromises);
+                        console.log(`✓ Synced name "${name}" to ${snap.docs.length} pending reservations.`);
+                    } catch (syncErr) {
+                        console.error('Failed to sync name to reservations:', syncErr);
+                    }
+                }
+
+                // Update UI greeting immediately
+                const greetingName = document.getElementById('memberName');
+                if (greetingName) greetingName.textContent = name;
+
+                const confirm = document.getElementById('saveConfirm');
+                confirm.classList.add('visible');
+                setTimeout(() => confirm.classList.remove('visible'), 3000);
+            } catch (e) {
+                console.error('Save settings failed:', e);
+                alert("Could not save settings. Please try again.");
+            }
+        }
+
+        // ── SAME DAY ARRIVAL SECTION ──
+        function renderSDASection(member, activeRes) {
+            const container = document.getElementById('sameDayContainer');
+            if (!container) return;
+
+            const isPro = member.tier === 'PRO' || member.tier === 'PAID';
+            const isSDAEnabled = isPro || MEMBERSHIP_MODE === 'freeVIP';
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            const hasReachedLimit = !isPro && MEMBERSHIP_MODE === 'legacy' && member.lastReservationMonth === currentMonth && (member.reservationCountThisMonth || 0) >= 1;
+            const hasActiveSameDay = activeRes.some(r => r.isSameDay === true && r.status === 'PENDING');
+
+            if (hasActiveSameDay) {
+                container.innerHTML = `
+                    <button class="btn-sameday sda-active-queue-btn" disabled>
+                        ✓ YOU ARE IN THE QUEUE
+                    </button>
+                    <div class="same-day-status" style="display: block">
+                        See you soon! Speak to the front desk when you arrive.
+                    </div>`;
+            } else if (!isSDAEnabled) {
+                // Free members: Show the VIP priority nudge instead of the button
+                container.innerHTML = `
+                <div class="res-limit-box sda-limit" style="margin-top: 5px;">
+                    <div class="limit-icon">⚡</div>
+                    <div class="limit-msg">
+                        <strong>Same Day Arrival</strong> is a priority feature for VIP members.
+                    </div>
+                    <div class="limit-upgrade-nudge">
+                        Let us know when you're on the way to secure your spot. Become a VIP today for priority queueing and favorite table memory.
+                    </div>
+                    <button class="btn-upgrade-simple" onclick="window.location.href='join.html#tiers'">
+                        BECOME A VIP TODAY
+                    </button>
+                </div>`;
+            } else {
+                // VIP members: Show the button
+                container.innerHTML = `
+                <button id="btnSameDayArrival" class="btn-sameday" onclick="window.openSameDayModal()">
+                    I'M HEADING THERE NOW!
+                </button>
+                <div id="sameDayStatus" class="same-day-status" style="display: none;">
+                    Adding you to the queue...
+                </div>`;
+            }
+        }
+
+        // ── RESERVE CARD ──
+        function renderReserveCard(member) {
+            const container = document.getElementById('reserveContent');
+            const sub = document.getElementById('reserveSub');
+            const isPro = member.tier === 'PRO' || member.tier === 'PAID';
+            const currentMonth = new Date().toISOString().substring(0, 7);
+            const hasReachedLimit = !isPro && MEMBERSHIP_MODE === 'legacy' && member.lastReservationMonth === currentMonth && (member.reservationCountThisMonth || 0) >= 1;
+
+            if (isPro) {
+                sub.textContent = 'As a VIP member, book up to 7 days in advance — anytime, unlimited.';
+                container.innerHTML = `
+                    <button class="btn-reserve-pro" id="btnOpenReservation">
+                        🎱 Reserve My Table
+                    </button>
+                    <div class="btn-reserve-note">Up to 7-days out · Unlimited reservations</div>`;
+
+                document.getElementById('btnOpenReservation')
+                    .addEventListener('click', () => openResModal(true));
+            } else if (hasReachedLimit) {
+                // Calculate days until the 1st of the next month
+                const now = new Date();
+                const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+                const diffTime = nextMonth - now;
+                const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                const dayText = daysLeft === 1 ? "1 day" : `${daysLeft} days`;
+
+                sub.textContent = 'Monthly reservation limit reached.';
+                container.innerHTML = `
+                    <div class="res-limit-box">
+                        <div class="limit-icon">🔒</div>
+                        <div class="limit-msg">
+                            You have <strong>${dayText}</strong> before your next free reservation credit.
+                        </div>
+                        <div class="limit-upgrade-nudge">
+                            Become a VIP today for <strong>unlimited</strong> reservations and priority booking.
+                        </div>
+                        <button class="btn-upgrade-simple" onclick="window.location.href='join.html#tiers'">
+                            BECOME A VIP TODAY
+                        </button>
+                    </div>`;
+            } else {
+                sub.textContent = MEMBERSHIP_MODE === 'freeVIP'
+                    ? 'Book your table up to 7 days in advance.'
+                    : 'Book your table today. Become a VIP for priority 7-day booking.';
+                container.innerHTML = MEMBERSHIP_MODE === 'freeVIP' ? `
+                    <button class="btn-reserve-pro" id="btnOpenReservation">
+                        🎱 Reserve My Table
+                    </button>
+                    <div class="btn-reserve-note">7-day booking window · Unlimited reservations</div>` : `
+                    <div class="tier-compare">
+                        <div class="tier-compare-box current-free">
+                            <div class="tier-compare-name">You</div>
+                            <div class="tier-compare-rule">1 DAY OUT</div>
+                            <div class="tier-compare-detail">1 reservation<br>per month</div>
+                        </div>
+                        <div class="tier-compare-box upgrade-pro">
+                            <div class="tier-compare-badge">VIP Member</div>
+                            <div class="tier-compare-name">VIP Member</div>
+                            <div class="tier-compare-rule">7 DAYS OUT</div>
+                            <div class="tier-compare-detail">Unlimited<br>reservations</div>
+                        </div>
+                    </div>
+                    <button class="btn-reserve-free" id="btnOpenReservation">
+                        Book a Table
+                    </button>
+                    <div class="btn-reserve-note">Same-day / next-day booking only</div>`;
+
+                document.getElementById('btnOpenReservation')
+                    .addEventListener('click', () => openResModal(false));
+            }
+        }
+
+        // ════════════════════════════════════════
+        // RESERVATION MODAL
+        // ════════════════════════════════════════
+
+        const GAS_URL =
+            'https://script.google.com/macros/s/AKfycbz0IiJPRWVHb1z78OYtGXQwcpIp9Ep0Ux2bRzQNtP3rRioXb4rBrGKzWxqf3GNjVJg/exec';
+
+        // 26 time slots: 11:00am – 11:30pm every 30 min
+        const TIME_SLOTS = (() => {
+            const slots = [];
+            for (let h = 11; h <= 23; h++) {
+                for (let m of [0, 30]) {
+                    if (h === 23 && m === 30) break; const hour12 = h > 12 ? h -
+                        12 : h === 0 ? 12 : h;
+                    const ampm = h >= 12 ? 'PM' : 'AM';
+                    const label = `${hour12}:${m === 0 ? '00' : '30'} ${ampm}`;
+                    slots.push(label);
+                }
+            }
+            return slots;
+        })();
+
+        let resState = {
+            step: 1, isPro: false,
+            date: null, timeSlot: null, tableType: null, party: 2,
+            calYear: new Date().getFullYear(),
+            calMonth: new Date().getMonth(),
+        };
+
+        function openResModal(isPro) {
+            resState = {
+                step: 1, isPro,
+                date: null, timeSlot: null, tableType: null, party: 2,
+                calYear: new Date().getFullYear(),
+                calMonth: new Date().getMonth(),
+                editId: null
+            };
+            document.getElementById('resModalBackdrop').classList.add('open');
+            renderResStep();
+        }
+
+        function closeResModal() {
+            document.getElementById('resModalBackdrop').classList.remove('open');
+        }
+
+        // --- MODIFY & CANCEL FUNCTIONS ---
+        window.cancelReservation = async function (resId, btnElement) {
+            // STEP 1: If it's the first click, transform it into a confirmation button
+            if (btnElement.innerText === 'CANCEL') {
+                btnElement.innerText = 'SURE?';
+                btnElement.style.background = '#ff2a6d';
+                btnElement.style.color = '#fff';
+
+                // Set a 4-second timer to reset it if they don't click again
+                setTimeout(() => {
+                    // Only reset if it's still in the DOM and hasn't been clicked
+                    if (btnElement && btnElement.innerText === 'SURE?') {
+                        btnElement.innerText = 'CANCEL';
+                        btnElement.style.background = 'transparent';
+                        btnElement.style.color = '#ff2a6d';
+                    }
+                }, 4000);
+
+                return; // Stop the function here so it doesn't delete the database record yet
+            }
+
+            // STEP 2: If they clicked it while it says "SURE?", execute the cancellation
+            btnElement.innerText = '...';
+            try {
+                await updateDoc(doc(db, 'reservations', resId), {
+                    status: 'CANCELLED',
+                    updatedAt: new Date().toISOString()
+                });
+
+                // You don't even need to refresh the page here! 
+                // Your Firestore onSnapshot listener will instantly detect the status change 
+                // and automatically remove the row from the screen.
+
+            } catch (e) {
+                console.error(e);
+                alert("Error cancelling. Please try again or see the front desk.");
+                // Reset the button if it fails
+                btnElement.innerText = 'CANCEL';
+                btnElement.style.background = 'transparent';
+                btnElement.style.color = '#ff2a6d';
+            }
+        };
+
+        window.editReservation = function (resId) {
+            const res = window.userActiveReservations.find(r => r.id === resId);
+            if (!res) return;
+
+            // Convert saved date back to UI format
+            const d = new Date(res.reservationTime);
+            const h = d.getHours();
+            const m = d.getMinutes();
+            const ampm = h >= 12 ? 'PM' : 'AM';
+            const hour12 = h % 12 || 12;
+            const timeStr = `${hour12}:${m.toString().padStart(2, '0')} ${ampm}`;
+
+            const isPro = document.getElementById('tierBadge').innerHTML.includes('VIP Member');
+
+            // Load existing data into the modal state
+            resState = {
+                step: 1,
+                isPro: isPro,
+                date: d,
+                timeSlot: timeStr,
+                tableType: res.tableType,
+                party: res.peopleCount,
+                calYear: d.getFullYear(),
+                calMonth: d.getMonth(),
+                editId: resId // Track that this is an edit, not a new booking
+            };
+
+            document.getElementById('resModalBackdrop').classList.add('open');
+            renderResStep();
+        };
+
+        document.getElementById('resModalBackdrop').addEventListener('click', e => {
+            if (e.target === document.getElementById('resModalBackdrop')) closeResModal();
+        });
+        document.getElementById('btnForceCloseRes').addEventListener('click', closeResModal);
+
+        function renderResStep() {
+            const titles = ['PICK A DATE', 'PICK A TIME', 'YOUR TABLE', 'CONFIRM'];
+            document.getElementById('resModalTitle').textContent = titles[resState.step - 1];
+            document.getElementById('resModalStep').textContent = `Step ${resState.step} of 4`;
+
+            const body = document.getElementById('resModalBody');
+            const footer = document.getElementById('resModalFooter');
+
+            const pips = [1, 2, 3, 4].map(i => {
+                const cls = i < resState.step ? 'done' : i === resState.step ? 'active' : ''; return `<div
+                class="res-step-pip ${cls}">
+                </div>`;
+            }).join('');
+
+            switch (resState.step) {
+                case 1: renderStepDate(body, footer, pips); break;
+                case 2: renderStepTime(body, footer, pips); break;
+                case 3: renderStepTable(body, footer, pips); break;
+                case 4: renderStepConfirm(body, footer, pips); break;
+            }
+        }
+
+        function renderStepDate(body, footer, pips) {
+            const today = new Date(); today.setHours(0, 0, 0, 0);
+            const maxDays = resState.isPro ? 7 : (MEMBERSHIP_MODE === 'freeVIP' ? 7 : 1);
+            const maxDate = new Date(today); maxDate.setDate(today.getDate() + maxDays);
+
+            const year = resState.calYear;
+            const month = resState.calMonth;
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMon = new Date(year, month + 1, 0).getDate();
+            const monthName = new Date(year, month).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+            const prevOk = (year > today.getFullYear()) || (month > today.getMonth());
+            const nextOk = new Date(year, month + 1, 1) <= maxDate; let dayCells = ''; for (let i = 0; i < firstDay;
+                i++) dayCells += `<div class="cal-day empty">
+                    </div>`;
+            for (let d = 1; d <= daysInMon; d++) {
+                const thisDate = new Date(year, month, d); const
+                    isPast = thisDate < today; const isFuture = thisDate > maxDate;
+                const isToday = thisDate.getTime() === today.getTime();
+                const isSel = resState.date && thisDate.getTime() === resState.date.getTime();
+
+                let cls = 'cal-day';
+                if (isPast || isFuture) cls += ' disabled';
+                else if (isSel) cls += ' selected';
+                else if (isToday) cls += ' today';
+
+                const clickable = !isPast && !isFuture;
+                dayCells += `<div class="${cls}" ${clickable ? `data-date="${thisDate.toISOString()}" ` : ''}>
+                            ${d}</div>`;
+            }
+
+            body.innerHTML = `
+                        <div class="res-steps-bar">${pips}</div>
+                        <div class="cal-header">
+                            <button class="cal-nav-btn" id="calPrev" ${!prevOk ? 'disabled' : ''}>&#8249;</button>
+                            <div class="cal-month-label">${monthName.toUpperCase()}</div>
+                            <button class="cal-nav-btn" id="calNext" ${!nextOk ? 'disabled' : ''}>&#8250;</button>
+                        </div>
+                        <div class="cal-grid">
+                            <div class="cal-day-label">Su</div>
+                            <div class="cal-day-label">Mo</div>
+                            <div class="cal-day-label">Tu</div>
+                            <div class="cal-day-label">We</div>
+                            <div class="cal-day-label">Th</div>
+                            <div class="cal-day-label">Fr</div>
+                            <div class="cal-day-label">Sa</div>
+                            ${dayCells}
+                        </div>
+                        <div class="cal-tier-notice ${resState.isPro ? 'pro-notice' : ''}">
+                            <span>⭐</span>
+                            <span>${resState.isPro
+                    ? 'VIP Member — Book up to 7 days in advance'
+                    : (MEMBERSHIP_MODE === 'freeVIP'
+                        ? 'VIP Member — Book up to 7 days in advance.'
+                        : 'Free Member — Same-day &amp; next-day only.')
+                }</span>
+                        </div>`;
+
+            footer.innerHTML = ``;
+
+            document.getElementById('calPrev').addEventListener('click', () => {
+                if (resState.calMonth === 0) { resState.calMonth = 11; resState.calYear--; }
+                else resState.calMonth--;
+                renderResStep();
+            });
+            document.getElementById('calNext').addEventListener('click', () => {
+                if (resState.calMonth === 11) { resState.calMonth = 0; resState.calYear++; }
+                else resState.calMonth++;
+                renderResStep();
+            });
+            body.querySelectorAll('.cal-day[data-date]').forEach(el => {
+                el.addEventListener('click', () => {
+                    resState.date = new Date(el.dataset.date);
+                    resState.step = 2;
+                    renderResStep();
+                });
+            });
+        }
+
+        function renderStepTime(body, footer, pips) {
+            const dateLabel = resState.date
+                ? resState.date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })
+                : '—';
+
+            const slots = TIME_SLOTS.map(t => {
+                const sel = resState.timeSlot === t;
+                return `<div class="time-slot ${sel ? 'selected' : ''}" data-time="${t}">${t}</div>`;
+            }).join('');
+
+            body.innerHTML = `
+                        <div class="res-steps-bar">${pips}</div>
+                        <div class="selected-date-display">${dateLabel.toUpperCase()}</div>
+                        <div class="time-slot-grid">${slots}</div>`;
+
+            footer.innerHTML = `
+                        <button class="btn-modal-back" id="btnBack2">&#8592; Back</button>`;
+
+            body.querySelectorAll('.time-slot').forEach(el => {
+                el.addEventListener('click', () => {
+                    resState.timeSlot = el.dataset.time;
+                    resState.step = 3;
+                    renderResStep();
+                });
+            });
+            document.getElementById('btnBack2').addEventListener('click', () => {
+                resState.step = 1;
+                renderResStep();
+            });
+        }
+
+        function renderStepTable(body, footer, pips) {
+            body.innerHTML = `
+                        <div class="res-steps-bar">${pips}</div>
+                        <div class="res-option-group">
+                            <div class="res-option-label">Table Preference</div>
+                            <div class="res-option-row">
+                                <button class="res-option-btn ${resState.tableType === '7ft' ? 'selected' : ''}"
+                                    data-table="7ft">
+                                    <span class="option-icon">🎱</span>
+                                    7 Foot
+                                    <span class="option-sub">Standard play</span>
+                                </button>
+                                <button class="res-option-btn ${resState.tableType === '9ft' ? 'selected' : ''}"
+                                    data-table="9ft">
+                                    <span class="option-icon">🏆</span>
+                                    9 Foot
+                                    <span class="option-sub">Tournament size</span>
+                                </button>
+                                <button
+                                    class="res-option-btn ${resState.tableType === 'No Preference' ? 'selected' : ''}"
+                                    data-table="No Preference">
+                                    <span class="option-icon">✌️</span>
+                                    Either
+                                    <span class="option-sub">First available</span>
+                                </button>
+                            </div>
+                        </div>`;
+
+            footer.innerHTML = `
+                        <button class="btn-modal-back" id="btnBack3">&#8592; Back</button>`;
+
+            body.querySelectorAll('[data-table]').forEach(el => {
+                el.addEventListener('click', () => {
+                    resState.tableType = el.dataset.table;
+                    resState.step = 4;
+                    renderResStep();
+                });
+            });
+            document.getElementById('btnBack3').addEventListener('click', () => {
+                resState.step = 2;
+                renderResStep();
+            });
+        }
+
+        function renderStepConfirm(body, footer, pips) {
+            const dateStr = resState.date
+                ? resState.date.toLocaleDateString('en-US', {
+                    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+                })
+                : '—';
+
+            body.innerHTML = `
+                        <div class="res-steps-bar">${pips}</div>
+                        <div class="res-confirm-card">
+                            <div class="res-confirm-header">🎱 RESERVATION SUMMARY</div>
+                            <div class="res-confirm-row">
+                                <span class="res-confirm-key">Date</span>
+                                <span class="res-confirm-val">${dateStr}</span>
+                            </div>
+                            <div class="res-confirm-row">
+                                <span class="res-confirm-key">Time</span>
+                                <span class="res-confirm-val">${resState.timeSlot}</span>
+                            </div>
+                            <div class="res-confirm-row">
+                                <span class="res-confirm-key">Table</span>
+                                <span class="res-confirm-val">${resState.tableType}</span>
+                            </div>
+                            <div class="res-confirm-row">
+                                <span class="res-confirm-key">Players</span>
+                                <div class="party-stepper stepper-mini">
+                                    <button class="stepper-btn" id="partyMinus" ${resState.party <= 1 ? 'disabled' : ''}>−</button>
+                                    <div class="stepper-val" id="partyVal">${resState.party}</div>
+                                    <button class="stepper-btn" id="partyPlus" ${resState.party >= 8 ? 'disabled' : ''}>+</button>
+                                </div>
+                            </div>
+                            <div class="res-confirm-row">
+                                <span class="res-confirm-key">Location</span>
+                                <span class="res-confirm-val">VIP Billiards · Bayport</span>
+                            </div>
+                        </div>
+                        <div class="res-phone-notice">
+                            Unless there is an issue, assume your reservation is confirmed. 🎱
+                        </div>`;
+
+            footer.innerHTML = `
+                        <button class="btn-modal-back" id="btnBack4">&#8592; Back</button>
+                        <button class="btn-modal-submit" id="btnSubmitRes">CONFIRM RESERVATION</button>`;
+
+            document.getElementById('partyMinus').addEventListener('click', () => {
+                if (resState.party > 1) { resState.party--; renderResStep(); }
+            });
+            document.getElementById('partyPlus').addEventListener('click', () => {
+                if (resState.party < 8) { resState.party++; renderResStep(); }
+            });
+            document.getElementById('btnBack4').addEventListener('click', () => {
+                resState.step = 3;
+                renderResStep();
+            });
+            document.getElementById('btnSubmitRes').addEventListener('click', submitReservation);
+        }
+
+        async function submitReservation() {
+            const btn = document.getElementById('btnSubmitRes');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="submitting-spinner"></span>SUBMITTING...';
+
+            const memberSnap = await getDoc(doc(db, 'members', currentUser.uid));
+            const member = memberSnap.data();
+
+            const timeMatch = resState.timeSlot.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            let hours = parseInt(timeMatch[1]);
+            const minutes = parseInt(timeMatch[2]);
+            const ampm = timeMatch[3].toUpperCase();
+            if (ampm === 'PM' && hours < 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+
+            const reservationDate = new Date(resState.date);
+            reservationDate.setHours(hours, minutes, 0, 0);
+
+            const currentMonth = new Date().toISOString().substring(0, 7);
+
+            // Only check the booking limit if this is a NEW reservation
+            if (!resState.editId && member.tier !== 'PRO' && member.tier !== 'PAID' && MEMBERSHIP_MODE === 'legacy') {
+                if (member.lastReservationMonth === currentMonth && (member.reservationCountThisMonth || 0) >= 1) {
+                    alert('Free members are limited to 1 reservation per month.');
+                    btn.disabled = false;
+                    btn.innerHTML = 'CONFIRM RESERVATION';
+                    return;
+                }
+            }
+
+            const payload = {
+                memberEmail: member.email || currentUser.email,
+                memberName: member.name || currentUser.displayName,
+                reservationTime: reservationDate.toISOString(),
+                tableType: resState.tableType,
+                peopleCount: parseInt(resState.party),
+                status: 'PENDING',
+                createdAt: new Date().toISOString(),
+                uid: currentUser.uid
+            };
+
+            try {
+                if (resState.editId) {
+                    // UPDATE existing reservation
+                    await updateDoc(doc(db, 'reservations', resState.editId), {
+                        reservationTime: reservationDate.toISOString(),
+                        tableType: resState.tableType,
+                        peopleCount: parseInt(resState.party),
+                        updatedAt: new Date().toISOString()
+                    });
+                } else {
+                    // CREATE new reservation
+                    await addDoc(collection(db, 'reservations'), payload);
+                    await updateDoc(doc(db, 'members', currentUser.uid), {
+                        lastReservationMonth: currentMonth,
+                        reservationCountThisMonth: (member.lastReservationMonth === currentMonth)
+                            ? (member.reservationCountThisMonth || 0) + 1
+                            : 1
+                    });
+                }
+
+                const displayDate = reservationDate.toLocaleDateString('en-US', {
+                    month: '2-digit', day: '2-digit', year: 'numeric'
+                });
+
+                showResSuccess(displayDate, resState.timeSlot, !!resState.editId);
+                await loadReservation(currentUser.email, currentUser.uid);
+            } catch (e) {
+                console.error('Reservation submit error:', e);
+                btn.disabled = false;
+                btn.innerHTML = 'CONFIRM RESERVATION';
+                alert('Submission failed — please try again or see the front desk.');
+            }
+        }
+
+        function showResSuccess(dateStr, time, isEdit = false) {
+            document.getElementById('resModalTitle').textContent = isEdit ? "RESERVATION UPDATED!" : "YOU'RE BOOKED!";
+            document.getElementById('resModalStep').textContent = 'Confirmed';
+
+            const titleText = isEdit ? "RESERVATION MODIFIED" : "TABLE RESERVED";
+            const subText = isEdit
+                ? "Your reservation has been successfully updated."
+                : "Your reservation is in. Unless there is an issue, assume your reservation is confirmed. 🎱";
+
+            document.getElementById('resModalBody').innerHTML = `
+                <div class="res-success">
+                    <div class="res-success-icon">🎱</div>
+                    <div class="res-success-title">${titleText}</div>
+                    <div class="res-success-sub">${subText}</div>
+                    <div class="res-success-details">
+                        <div class="res-confirm-row">
+                            <span class="res-confirm-key">Date</span>
+                            <span class="res-confirm-val">${dateStr}</span>
+                        </div>
+                        <div class="res-confirm-row">
+                            <span class="res-confirm-key">Time</span>
+                            <span class="res-confirm-val">${time}</span>
+                        </div>
+                        <div class="res-confirm-row no-border">
+                            <span class="res-confirm-key">Location</span>
+                            <span class="res-confirm-val">VIP Billiards · Bayport</span>
+                        </div>
+                    </div>
+                </div>`;
+
+            document.getElementById('resModalFooter').innerHTML = `
+                <button class="btn-modal-close" id="btnResClose">Done</button>`;
+
+            document.getElementById('btnResClose').addEventListener('click', closeResModal);
+        }
+        // --- SAME DAY ARRIVAL LOGIC ---
+        let sameDayState = { eta: 0, type: 'No Preference' };
+
+        window.openSameDayModal = function () {
+            console.log("openSameDayModal clicked. isProMember:", window.isProMember);
+            if (!currentUser || !currentUser.email) {
+                alert("Please log in first!");
+                return;
+            }
+            if (!window.isProMember && MEMBERSHIP_MODE === 'legacy') {
+                console.log("Not a PRO member, blocking modal.");
+                return;
+            }
+            const backdrop = document.getElementById('sameDayModalBackdrop');
+            if (backdrop) {
+                backdrop.classList.add('open');
+            } else {
+                console.error("Could not find sameDayModalBackdrop");
+            }
+        };
+
+        window.closeSameDayModal = function () {
+            const backdrop = document.getElementById('sameDayModalBackdrop');
+            if (backdrop) {
+                backdrop.classList.remove('open');
+            }
+        };
+
+        // Attach listeners to the modal buttons
+        document.querySelectorAll('#sameDayModal .eta-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#sameDayModal .eta-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                sameDayState.eta = parseInt(btn.dataset.eta);
+            });
+        });
+
+        document.querySelectorAll('#sameDayModal .res-option-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('#sameDayModal .res-option-btn').forEach(b => b.classList.remove('selected'));
+                btn.classList.add('selected');
+                sameDayState.type = btn.dataset.type;
+            });
+        });
+
+        document.getElementById('btnConfirmArrival').addEventListener('click', () => {
+            window.triggerSameDayArrival();
+        });
+
+        window.triggerSameDayArrival = async function () {
+            const btnConfirm = document.getElementById('btnConfirmArrival');
+            const btnMain = document.getElementById('btnSameDayArrival');
+            const statusText = document.getElementById('sameDayStatus');
+
+            btnConfirm.disabled = true;
+            btnConfirm.innerText = "SENDING...";
+
+            try {
+                // Fetch latest member state for limit checking
+                const memberSnap = await getDoc(doc(db, 'members', currentUser.uid));
+                const member = memberSnap.data();
+                const currentMonth = new Date().toISOString().substring(0, 7);
+
+                // --- 1. CHECK RESERVATION LIMIT (FREE TIER) ---
+                if (member.tier !== 'PRO' && member.tier !== 'PAID' && MEMBERSHIP_MODE === 'legacy') {
+                    if (member.lastReservationMonth === currentMonth && (member.reservationCountThisMonth || 0) >= 1) {
+                        alert('Free members are limited to 1 reservation per month.');
+                        btnConfirm.disabled = false;
+                        btnConfirm.innerText = "SEND ARRIVAL ALERT";
+                        return;
+                    }
+                }
+
+                // 2. Prepare Data
+                const etaText = document.querySelector('#sameDayModal .eta-btn.selected').dataset.etaText;
+                const tablePref = document.getElementById('sameDayTablePref').value;
+
+                const resData = {
+                    memberEmail: currentUser.email,
+                    memberName: document.getElementById('memberName').innerText || currentUser.displayName || 'VIP Member',
+                    reservationTime: new Date().toISOString(),
+                    tableType: tablePref,
+                    peopleCount: 1,
+                    status: "PENDING",
+                    details: `SDA: ${etaText} (Pref: ${tablePref})`,
+                    isSameDay: true,
+                    etaOption: etaText,
+                    createdAt: new Date().toISOString(),
+                    uid: currentUser.uid
+                };
+
+                // 3. Push to Firestore & Increment Counter
+                await addDoc(collection(db, "reservations"), resData);
+                await updateDoc(doc(db, 'members', currentUser.uid), {
+                    lastReservationMonth: currentMonth,
+                    reservationCountThisMonth: (member.lastReservationMonth === currentMonth)
+                        ? (member.reservationCountThisMonth || 0) + 1
+                        : 1
+                });
+
+                // Success
+                closeSameDayModal();
+
+                // UI Update on main dashboard
+                btnMain.innerText = "✓ YOU ARE IN THE QUEUE";
+                btnMain.style.background = "linear-gradient(135deg, #00b09b, #96c93d)";
+                btnMain.disabled = true;
+                statusText.innerText = "See you soon! Speak to the front desk when you arrive.";
+                statusText.style.display = "block";
+
+            } catch (error) {
+                console.error("Error creating Same Day Arrival: ", error);
+                btnConfirm.disabled = false;
+                btnConfirm.innerText = "ERROR - TRY AGAIN";
+                alert("Something went wrong. Please try again or show this to the front desk.");
+            }
+        };
+
+
+        // Check for Stripe Success (Handled in onAuthStateChanged now)
+        // window.addEventListener('DOMContentLoaded', () => ... );
+
+        async function handleVIPUpgrade() {
+            // 1. Get name from UI if possible
+            const name = document.getElementById('memberName').textContent || 'VIP Member';
+            const welcomeTitle = document.getElementById('welcomeMemberName');
+            if (welcomeTitle) welcomeTitle.textContent = name;
+
+            // 2. Show immediate UI
+            showVIPWelcomeModal();
+
+            // 2. Update Firestore
+            if (currentUser) {
+                try {
+                    const memberRef = doc(db, 'members', currentUser.uid);
+                    await updateDoc(memberRef, {
+                        tier: 'PRO',
+                        paidStatus: 'active',
+                        upgradeDate: new Date().toISOString()
+                    });
+                    console.log("✓ Member upgraded to VIP in Firestore");
+
+                    // 3. Strip URL
+                    window.history.replaceState({}, document.title, window.location.pathname);
+
+                    // 4. Refresh local data to unlock features immediately
+                    await loadMemberData(currentUser);
+
+                } catch (error) {
+                    console.error("Error updating membership:", error);
+                }
+            }
+        }
+
+        function showVIPWelcomeModal() {
+            const modal = document.getElementById('vipWelcomeModal');
+            if (modal) {
+                modal.style.display = 'flex';
+                if (typeof initVIPParticles === 'function') initVIPParticles();
+            }
+        }
+
+        function closeVIPModal() {
+            const modal = document.getElementById('vipWelcomeModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Expose to window for onboarding modal buttons
+        window.openResModal = openResModal;
+        window.closeVIPModal = closeVIPModal;
+
+        // ── CROWD METER LOGIC ──
+        const CLOUD_URL = "https://script.google.com/macros/s/AKfycbw2pC9KPL39Z4vlYNfV1kA44QImd4GaTuJDUBybR-xCQ9G59bTFe7sqn3IJVO2qVGNXRg/exec";
+        const HEAT_COLORS = [
+            '#00ff9d', '#33ff8f', '#66ff81', '#99ff73', '#ccff65',
+            '#ffff57', '#ffe650', '#ffcc49', '#ffb342', '#ff993b',
+            '#ff8030', '#ff662d', '#ff4d26', '#ff3320', '#ff1a1a',
+            '#e60000', '#cc0000'
+        ];
+
+        function getStatusInfo(count) {
+            const now = new Date();
+            const day = now.getDay();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+
+            // 1. Handle Closed Status
+            let closingHour = (day === 0 || day === 6) ? 2 : 1;
+            const isClosed = hours >= closingHour && hours < 11;
+
+            if (isClosed) {
+                const minutesUntilOpen = (11 - hours - 1) * 60 + (60 - minutes);
+                const h = Math.floor(minutesUntilOpen / 60);
+                const m = minutesUntilOpen % 60;
+                return { text: `CLOSED · OPENING IN ${h > 0 ? h + 'H ' : ''}${m} M`, color: 'var(--neon-red)' };
+            }
+
+            // 2. Open Status Messages
+            const messages = [
+                ["WIDE OPEN", "THE STAGE IS SET", "DOORS OPEN, TABLES READY"],
+                ["PLENTY OF ROOM", "PEACE AND QUIET", "GRAB A TABLE"],
+                ["LIGHT CROWD", "GOOD PRACTICE VIBE", "TAKE YOUR PICK"],
+                ["QUIET BUT STEADY", "RACK 'EM UP", "NICE ENERGY"],
+                ["WAKING UP", "STARTING TO FILL", "EARLY BIRD RUSH"],
+                ["NICE BUZZ", "AFTER-WORK CREW", "TABLES FILLING"],
+                ["STEADY FLOW", "SIX POCKETS, NO WAIT", "BALLS ARE CLACKING"],
+                ["GOOD ENERGY", "RACKING AND CRACKING", "SOLID TURNOUT"],
+                ["BUILDING UP", "SOLID RHYTHM", "GET IN WHILE YOU CAN"],
+                ["HALF THE ROOM", "50/50 VIBE", "MID-LEVEL ACTION"],
+                ["GETTING BUSY", "THE CLUB IS HUMMING", "CHALKING UP"],
+                ["SOLID CROWD", "DOUBLE DIGITS", "BETTER HURRY"],
+                ["LIVELY NIGHT", "GREAT SHOTS ONLY", "ENERGY IS HIGH"],
+                ["TURNING TABLES", "HARDWOOD ACTION", "VIBE IS HOT"],
+                ["ALMOST FULL", "NEAR CAPACITY", "LATE NIGHT RUSH"],
+                ["FEW TABLES LEFT", "RED ALERT! ACT FAST", "GET HERE SOON"],
+                ["VIP IS ROCKING", "ROOM IS HUMMING", "EDGE OF A SELLOUT"],
+                ["FULL HOUSE!", "STANDING ROOM ONLY", "TOTAL SELLOUT"]
+            ];
+
+            const pool = messages[count] || ["CHECKING ROOM..."];
+            const msg = pool[Math.floor(Math.random() * pool.length)];
+
+            let color = 'var(--neon-green)';
+            if (count > 5) color = '#ffcc49';
+            if (count > 10) color = '#ff9d00';
+            if (count > 14) color = 'var(--neon-red)';
+
+            return { text: msg, color: color };
+        }
+
+        async function fetchCrowdData() {
+            try {
+                const response = await fetch(CLOUD_URL + "?action=getLiveState&t=" + new Date().getTime());
+                const data = await response.json();
+
+                let activeCount = 0;
+                for (let i = 1; i <= 17; i++) {
+                    const table = data.tables[i.toString()];
+                    if (table && table.players && table.players.length > 0 && !table.isHold) activeCount++;
+                }
+
+                // Update UI
+                const countEl = document.getElementById('activeCount');
+                if (countEl) countEl.textContent = `${activeCount}/17 Tables`;
+
+                const status = getStatusInfo(activeCount);
+                const label = document.getElementById('statusLabel');
+                if (label) {
+                    label.textContent = status.text;
+                    label.style.color = status.color;
+                }
+
+                renderHeatScale(activeCount);
+                const updateEl = document.getElementById('lastUpdate');
+                if (updateEl) updateEl.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+            } catch (e) {
+                console.error('Crowd fetch error:', e);
+            }
+        }
+
+        function renderHeatScale(count) {
+            const container = document.getElementById('heatScale');
+            if (!container) return;
+            container.innerHTML = '';
+            for (let i = 1; i <= 17; i++) {
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                if (i <= count) {
+                    const color = HEAT_COLORS[i - 1];
+                    tick.style.color = color; // Used by currentColor in CSS
+                    tick.style.background = color;
+                    tick.classList.add('active');
+                }
+                container.appendChild(tick);
+            }
+        }
+
+        // Initialize 
+        fetchCrowdData();
+        setInterval(fetchCrowdData, 60000); // Once per minute is enough for dashboard
+
+        // VIP Modal Particle System
+        function initVIPParticles() {
+            const container = document.getElementById('particleContainer');
+            if (!container) return;
+            container.innerHTML = '';
+            const count = 30;
+            for (let i = 0; i < count; i++) {
+                const p = document.createElement('div');
+                p.className = 'particle';
+                const size = Math.random() * 3 + 1;
+                p.style.width = size + 'px';
+                p.style.height = size + 'px';
+                p.style.left = Math.random() * 100 + '%';
+                p.style.top = Math.random() * 100 + '%';
+                p.style.animationDelay = '-' + (Math.random() * 10) + 's';
+                container.appendChild(p);
+            }
+        }
+        window.initVIPParticles = initVIPParticles;
+
+        // CRITICAL: Expose to window so the button onclick works
+        window.closeVIPModal = closeVIPModal;
+    </script>
+
+    <!-- VIP WELCOME MODAL (ULTRA PREMIUM) -->
+    <div id="vipWelcomeModal" class="vip-modal-overlay js-hidden">
+        <div class="welcome-modal-ultra">
+            <div class="ultra-welcome-bg"></div>
+            <div id="particleContainer" class="particle-container"></div>
+
+            <div class="ultra-logo-container">
+                <img src="images/VIP2.png" alt="VIP Billiards" class="welcome-logo-img">
+            </div>
+
+            <div class="ultra-body">
+                <div class="glitter-text-main">YOU ARE A VIP MEMBER</div>
+
+                <!-- Footer highlight -->
+                <div class="text-gold-condensed">
+                    <div class="mb-5">
+                    </div>
+                    THE MORE YOU PLAY, THE MORE YOU EARN.
+                </div>
+
+                <div class="ultra-modal-action">
+                    <button class="btn-ultra-beveled" onclick="closeVIPModal()">
+                        MY DASHBOARD <span class="icon-arrow-gold">▶</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

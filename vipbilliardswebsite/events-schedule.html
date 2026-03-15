@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIP Billiards - Full Events Schedule</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #0a0b0f 0%, #1a1d29 100%);
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #C5B358;
+        }
+
+        .page-title {
+            color: #C5B358;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+        }
+
+        .page-subtitle {
+            color: #8b9bb4;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .events-disclaimer {
+            text-align: center;
+            color: #b8c5d6;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(197, 179, 88, 0.1);
+            border-radius: 8px;
+            border: 1px solid rgba(197, 179, 88, 0.3);
+        }
+
+        .events-list {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .event-card {
+            background: linear-gradient(135deg, #1a1d29 0%, #0f111a 100%);
+            border: 1px solid #333;
+            border-left: 5px solid #C5B358;
+            border-radius: 12px;
+            padding: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .event-card:hover {
+            transform: translateX(5px);
+            box-shadow: 0 6px 20px rgba(197, 179, 88, 0.3);
+        }
+
+        .event-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #333;
+        }
+
+        .event-date {
+            color: #05d9e8;
+            font-size: 1.1rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .event-time {
+            color: #8b9bb4;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .event-name {
+            color: white;
+            font-size: 1.4rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+
+        .event-description {
+            color: #b8c5d6;
+            font-size: 1.05rem;
+            line-height: 1.7;
+        }
+
+        .loading-state,
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            font-style: italic;
+            font-size: 1.2rem;
+        }
+
+        .last-update {
+            text-align: center;
+            color: #00ff9d;
+            font-size: 0.85rem;
+            font-family: monospace;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #333;
+            opacity: 0.7;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-bottom: 30px;
+            padding: 12px 30px;
+            background: linear-gradient(135deg, #C5B358 0%, #D4C469 100%);
+            color: #0a0b0f;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(197, 179, 88, 0.3);
+        }
+
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(197, 179, 88, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-title {
+                font-size: 1.8rem;
+            }
+
+            .event-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
+
+            .event-name {
+                font-size: 1.1rem;
+            }
+
+            .event-description {
+                font-size: 0.95rem;
+            }
+        }
+    </style>
+</head>
+
+<body data-page="events">
+    <div id="nav-placeholder"></div>
+    <div class="container">
+        <a href="index.html#events" class="back-button">← Back to Home</a>
+
+        <div class="page-header">
+            <div class="page-title">📅 All Events</div>
+            <div class="page-subtitle" id="dateDisplay">Loading...</div>
+        </div>
+
+        <div class="events-disclaimer">
+            VIP is always open to walk-in customers during all events. Please check the events below for estimated table
+            availability.
+        </div>
+
+        <div id="eventsContainer">
+            <div class="loading-state">Loading events...</div>
+        </div>
+
+        <div class="last-update" id="lastUpdate">Initializing...</div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs, orderBy } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyATn_LRrT14QeRp7primG0dK82pcj7I_K0",
+            authDomain: "vip-reservations.firebaseapp.com",
+            projectId: "vip-reservations",
+            storageBucket: "vip-reservations.firebasestorage.app",
+            messagingSenderId: "721372947742",
+            appId: "1:721372947742:web:441d5efe90198dbef2550f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        async function loadEvents() {
+            const container = document.getElementById('eventsContainer');
+            const dateDisp = document.getElementById('dateDisplay');
+
+            if (dateDisp) {
+                dateDisp.textContent = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+            }
+
+            try {
+                const todayStr = new Date().toISOString().split('T')[0];
+                const q = query(
+                    collection(db, "events"),
+                    where("date", ">=", todayStr),
+                    orderBy("date", "asc")
+                );
+
+                const snapshot = await getDocs(q);
+                const events = [];
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.public) {
+                        events.push(data);
+                    }
+                });
+
+                if (events.length === 0) {
+                    container.innerHTML = '<div class="empty-state">No upcoming events scheduled at this time.</div>';
+                    return;
+                }
+
+                container.innerHTML = '<div class="events-list">' + events.map(e => {
+                    const formatTime = (time) => {
+                        if (!time) return '';
+                        let [h, m] = time.split(':');
+                        h = parseInt(h);
+                        const ampm = h >= 12 ? 'PM' : 'AM';
+                        h = h % 12 || 12;
+                        return `${h}:${m || '00'} ${ampm}`;
+                    };
+                    const startDisp = formatTime(e.startTime);
+                    const endDisp = formatTime(e.endTime);
+                    return `
+                        <div class="event-card">
+                            <div class="event-header">
+                                <div class="event-date">${new Date(e.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                                <div class="event-time">${startDisp}${endDisp ? ' - ' + endDisp : ''}</div>
+                            </div>
+                            <div class="event-name">${e.title}</div>
+                            <div class="event-description">${e.publicNotes || ''}</div>
+                        </div>`;
+                }).join('') + '</div>';
+
+                const lastUpdate = document.getElementById('lastUpdate');
+                if (lastUpdate) {
+                    lastUpdate.textContent = 'Updated: ' + new Date().toLocaleTimeString();
+                }
+
+            } catch (err) {
+                console.error("Event fetch error:", err);
+                container.innerHTML = '<div class="empty-state">Unable to load events at this time.</div>';
+            }
+        }
+
+        loadEvents();
+        setInterval(loadEvents, 300000);
+    </script>
+    <script src="/js/nav-loader.js"></script>
+</body>
+
+</html>
