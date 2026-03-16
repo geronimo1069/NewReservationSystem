@@ -789,9 +789,8 @@
                     title="Custom Adjustment Description">
             </div>
             <div class="text-muted mb-5 u-b728e98b" style="margin-top:14px;">Amount ($)</div>
-            <input type="text" id="adjAmount" class="adj-input" placeholder="0.00 (Positive Number)"
-                inputmode="decimal" oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
-                title="Adjustment Amount">
+            <input type="text" id="adjAmount" class="adj-input" placeholder="0.00 (Positive Number)" inputmode="decimal"
+                oninput="this.value = this.value.replace(/[^0-9.]/g, '')" title="Adjustment Amount">
             <button class="btn-submit-adj" onclick="addAdjustment()">LOG REVENUE ADJ</button>
         </div>
         <h3 class="mt-30 border-b text-neon-orange">CASH
@@ -810,9 +809,13 @@
             <div class="mb-10 text-sm u-5bbb6de5">Amount Taken ($)</div><input type="text" id="expAmount"
                 class="expense-input" placeholder="0.00 (Positive Number)" inputmode="decimal"
                 oninput="this.value = this.value.replace(/[^0-9.]/g, '')" title="Payout Amount">
-            <div id="jimMoneyRow" style="display:none; margin: 10px 0 12px; padding: 10px 12px; background: rgba(255,200,50,0.07); border: 1px solid rgba(255,200,50,0.3); border-radius: 6px; align-items: center; gap: 10px;">
-                <input type="checkbox" id="expIsOwner" style="width:18px; height:18px; accent-color: var(--holo-gold, #ffd700); cursor:pointer;">
-                <label for="expIsOwner" style="color: var(--holo-gold, #ffd700); font-size: 0.8rem; font-weight: bold; cursor: pointer;">👑 Jim's Money — NOT from drawer</label>
+            <div id="jimMoneyRow"
+                style="display:none; margin: 10px 0 12px; padding: 10px 12px; background: rgba(255,200,50,0.07); border: 1px solid rgba(255,200,50,0.3); border-radius: 6px; align-items: center; gap: 10px;">
+                <input type="checkbox" id="expIsOwner"
+                    style="width:18px; height:18px; accent-color: var(--holo-gold, #ffd700); cursor:pointer;">
+                <label for="expIsOwner"
+                    style="color: var(--holo-gold, #ffd700); font-size: 0.8rem; font-weight: bold; cursor: pointer;">👑
+                    Jim's Money — NOT from drawer</label>
             </div>
             <button class="btn-submit-exp" onclick="addExpense()">LOG CASH PAYOUT</button>
         </div>
@@ -892,10 +895,10 @@
         // Comment/uncomment the appropriate URL below:
 
         // === DEVELOPMENT MODE (Testing - writes to Development DB) ===
-        // const PRESET_CLOUD_URL = "https://script.google.com/macros/s/AKfycbxpZLzQ2mFhUi_JV5R_VrdoA4eI9LE3dtnp03-NKWm1QRFKa0qmq4MTQOBATjRIH-Hg/exec";
+        const PRESET_CLOUD_URL = "https://script.google.com/macros/s/AKfycbxpZLzQ2mFhUi_JV5R_VrdoA4eI9LE3dtnp03-NKWm1QRFKa0qmq4MTQOBATjRIH-Hg/exec";
 
         // === LIVE MODE (Production - writes to Master DB) ===
-        const PRESET_CLOUD_URL = "https://script.google.com/macros/s/AKfycbwESUjUqsHlld8K7aLIfyVdZK7htXiYYnZ44gpigdnYrmY1Vu98fDSxOgu8vo0WIDgIlQ/exec";
+        // const PRESET_CLOUD_URL = "https://script.google.com/macros/s/AKfycbwESUjUqsHlld8K7aLIfyVdZK7htXiYYnZ44gpigdnYrmY1Vu98fDSxOgu8vo0WIDgIlQ/exec";
 
         // ============================================================
         let tableData = {}; let scheduledMatches = []; let transactionLog = []; let adjustmentLog = []; let expenseLog = []; let staffHistory = []; let ownerPurchaseLog = [];
@@ -2357,7 +2360,7 @@
 
             const isScheduleMode = document.getElementById('scheduleModeToggle').checked;
 
-            if (!t1Name || !t2Name || t1Name === t2Name) return alert("Select valid teams.");
+            if (!t1Name || !t2Name || t1Name === t2Name) return showToast("Select two different teams.", "error");
 
             let fee = 25.00;
             if (LEAGUES[leagueKey]) {
@@ -2367,7 +2370,7 @@
 
             if (isScheduleMode) {
                 // --- SCHEDULE MODE ---
-                if (scheduledMatches.find(m => m.tableId == tableId)) return alert(`Table ${tableId} already has a pending schedule.`);
+                if (scheduledMatches.find(m => m.tableId == tableId)) return showToast(`Table ${tableId} already has a pending schedule.`, "error");
 
                 // TIME LOGIC
                 let timeLabel = "7:30 PM";
@@ -2395,12 +2398,12 @@
                 saveData();
                 renderScheduledMatches();
                 updateTableCard(tableId);
-                alert(`Match Scheduled for Table ${tableId}`);
+                showToast(`✓ Match scheduled for Table ${tableId} @ ${timeLabel}`, "success");
 
             } else {
                 // --- INSTANT ASSIGN MODE ---
-                if (tableData[tableId].players.length > 0) return alert(`Table ${tableId} busy!`);
-                if (tableData[tableId].isHold) return alert(`Table ${tableId} ON HOLD.`);
+                if (tableData[tableId].players.length > 0) return showToast(`Table ${tableId} is currently busy.`, "error");
+                if (tableData[tableId].isHold) return showToast(`Table ${tableId} is ON HOLD.`, "error");
 
                 // Find team objects to get unpaid dues
                 const teams = LEAGUES[leagueKey].teams;
@@ -2447,12 +2450,46 @@
                 updateTableCard(tableId);
                 saveData();
 
-                let alertMsg = `Match Assigned to Table ${tableId}\n`;
-                if (t1UnpaidDues > 0) alertMsg += `\n⚠️ ${t1Name} owes $${t1UnpaidDues} - Total: $${t1TotalFee.toFixed(2)}`;
-                if (t2UnpaidDues > 0) alertMsg += `\n⚠️ ${t2Name} owes $${t2UnpaidDues} - Total: $${t2TotalFee.toFixed(2)}`;
-
-                alert(alertMsg);
+                // Show toast — include unpaid dues warnings if any
+                let toastMsg = `✓ Match assigned to Table ${tableId}`;
+                if (t1UnpaidDues > 0) toastMsg += ` | ⚠️ ${t1Name} owes $${t1UnpaidDues.toFixed(2)}`;
+                if (t2UnpaidDues > 0) toastMsg += ` | ⚠️ ${t2Name} owes $${t2UnpaidDues.toFixed(2)}`;
+                showToast(toastMsg, t1UnpaidDues > 0 || t2UnpaidDues > 0 ? "warn" : "success");
             }
+        }
+
+        // ============================================================
+        // TOAST NOTIFICATION UTILITY
+        // ============================================================
+        function showToast(msg, type = 'success') {
+            const existing = document.getElementById('leagueToast');
+            if (existing) existing.remove();
+
+            const colors = {
+                success: { bg: 'rgba(0,230,118,0.15)', border: '#00e676', text: '#00e676' },
+                error:   { bg: 'rgba(255,42,109,0.15)',  border: '#ff2a6d', text: '#ff2a6d' },
+                warn:    { bg: 'rgba(255,200,0,0.15)',   border: '#ffc800', text: '#ffc800' }
+            };
+            const c = colors[type] || colors.success;
+
+            const toast = document.createElement('div');
+            toast.id = 'leagueToast';
+            toast.style.cssText = `
+                position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
+                background: ${c.bg}; border: 1px solid ${c.border}; color: ${c.text};
+                padding: 12px 24px; border-radius: 8px; font-weight: bold;
+                font-size: 0.9rem; letter-spacing: 0.5px; z-index: 99999;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+                backdrop-filter: blur(6px);
+                transition: opacity 0.5s ease;
+                white-space: nowrap; max-width: 90vw; text-align: center;
+            `;
+            toast.innerText = msg;
+            document.body.appendChild(toast);
+
+            // Auto-dismiss after 3s
+            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3600);
         }
 
         function renderScheduledMatches() {
@@ -2602,7 +2639,7 @@
                 tableData[0].players.push(...players);
                 tableData[tId].players = []; // Clear table
                 updateTableCard(0); // Update float card
-                alert(`moved ${busyName} to Float Table.`);
+                showToast(`${busyName} moved to Float Table.`, "warn");
             }
 
             // 2. ASSIGN LEAGUE PLAYERS — each team uses their own fee and pre-paid status
@@ -4161,21 +4198,25 @@
             <div class="text-muted mb-5">Team 1</div>
             <select id="editMatchTeam1" class="league-select" title="Edit Team 1"></select>
             <div class="text-muted mb-5" style="margin-top:8px;">Team 1 League Fee ($)</div>
-            <input type="number" id="editMatchFee1" class="league-select" min="0" step="0.01"
-                placeholder="e.g. 25.00" title="Team 1 League Fee" style="margin-bottom:6px;">
+            <input type="number" id="editMatchFee1" class="league-select" min="0" step="0.01" placeholder="e.g. 25.00"
+                title="Team 1 League Fee" style="margin-bottom:6px;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-                <input type="checkbox" id="editMatchPaid1" style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
-                <label for="editMatchPaid1" style="color:#00e676; font-size:0.8rem; font-weight:bold; cursor:pointer;">✓ Team 1 PRE-PAID</label>
+                <input type="checkbox" id="editMatchPaid1"
+                    style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
+                <label for="editMatchPaid1" style="color:#00e676; font-size:0.8rem; font-weight:bold; cursor:pointer;">✓
+                    Team 1 PRE-PAID</label>
             </div>
 
             <div class="text-muted mb-5">Team 2</div>
             <select id="editMatchTeam2" class="league-select" title="Edit Team 2"></select>
             <div class="text-muted mb-5" style="margin-top:8px;">Team 2 League Fee ($)</div>
-            <input type="number" id="editMatchFee2" class="league-select" min="0" step="0.01"
-                placeholder="e.g. 25.00" title="Team 2 League Fee" style="margin-bottom:6px;">
+            <input type="number" id="editMatchFee2" class="league-select" min="0" step="0.01" placeholder="e.g. 25.00"
+                title="Team 2 League Fee" style="margin-bottom:6px;">
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
-                <input type="checkbox" id="editMatchPaid2" style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
-                <label for="editMatchPaid2" style="color:#00e676; font-size:0.8rem; font-weight:bold; cursor:pointer;">✓ Team 2 PRE-PAID</label>
+                <input type="checkbox" id="editMatchPaid2"
+                    style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
+                <label for="editMatchPaid2" style="color:#00e676; font-size:0.8rem; font-weight:bold; cursor:pointer;">✓
+                    Team 2 PRE-PAID</label>
             </div>
 
             <div class="text-muted mb-5">Table</div>

@@ -27,14 +27,17 @@ export const ResManager = {
             querySnapshot.forEach((doc) => {
                 const data = doc.data();
                 const resTime = new Date(data.reservationTime);
+                const status = (data.status || '').toUpperCase();
                 
                 // Filter logic
                 if (filterPast) {
-                    if (resTime >= today) {
+                    // UPCOMING: Hide cancelled reservations
+                    if (resTime >= today && status !== 'CANCELLED') {
                         results.push({ id: doc.id, ...data });
                     }
                 } else {
-                    if (resTime < today) {
+                    // HISTORY: Show everything (including cancelled)
+                    if (resTime < today || status === 'CANCELLED') {
                         results.push({ id: doc.id, ...data });
                     }
                 }
@@ -113,13 +116,16 @@ export const ResManager = {
             snapshot.forEach((doc) => {
                 const data = doc.data();
                 const resTime = new Date(data.reservationTime);
+                const status = (data.status || '').toUpperCase();
                 
                 if (filterPast) {
-                    if (resTime >= today) {
+                    // UPCOMING: Hide cancelled reservations
+                    if (resTime >= today && status !== 'CANCELLED') {
                         results.push({ id: doc.id, ...data });
                     }
                 } else {
-                    if (resTime < today) {
+                    // HISTORY: Show everything (including cancelled)
+                    if (resTime < today || status === 'CANCELLED') {
                         results.push({ id: doc.id, ...data });
                     }
                 }

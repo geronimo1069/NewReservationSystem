@@ -285,7 +285,7 @@
         import { ResManager } from './src/admin/ResManager.js';
         import { EventManager } from './src/admin/EventManager.js';
         import { getActiveConfig } from './config.js';
-        import { getFirestore, collection, query, where, getDocs, doc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/11.10.0/firebase-firestore.js";
 
         const activeEnv = getActiveConfig();
         const db = getFirestore();
@@ -488,7 +488,6 @@
 
             reservations.forEach(res => {
                 const item = document.createElement('div');
-                item.className = `res-item ${selectedItemId === res.id ? 'selected' : ''}`;
                 item.onclick = () => window.selectRecord(res.id, 'reservation');
 
                 const name = res.memberName || res.name || 'Unknown Guest';
@@ -523,9 +522,14 @@
                     subDate = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
                 }
 
+                const isSDA = res.isSameDay === true;
+
+                // Apply class AFTER flags are known
+                item.className = `res-item${isSDA ? ' sda' : ''}${isToday ? ' today' : ''}${selectedItemId === res.id ? ' selected' : ''}`;
+
                 item.innerHTML = `
                     <div class="res-date-box">
-                        ${isToday ? '<div class="res-tag-today">TODAY</div>' : ''}
+                        ${isSDA ? '<div class="res-tag-sda">SAMEDAY</div>' : (isToday ? '<div class="res-tag-today">TODAY</div>' : '')}
                         <span class="indicator">${dayIndicator}</span>
                         <span class="date-sub">${subDate}</span>
                     </div>
@@ -610,10 +614,37 @@
             }
         }
 
+        window.headingNow = async (resId) => {
+            if (!confirm("Notify staff you are heading there now?")) return;
+            try {
+                const resRef = doc(db, "reservations", resId);
+                await updateDoc(resRef, {
+                    isSameDay: true,
+                    etaOption: "Heading Now",
+                    updatedAt: new Date().toISOString()
+                });
+                alert("✓ ALERT SENT: Staff has been notified you are on the way!");
+                // No need to manually refresh, Firestore listeners will trigger it
+            } catch (error) {
+                console.error("SDA Alert Failed:", error);
+                alert("Could not send alert. Please try again.");
+            }
+        };
+
         function renderReservationDetails(res) {
             const name = res.memberName || res.name || 'Guest User';
             const status = (res.status || 'PENDING').toUpperCase();
             
+            // Check if today for SDA button
+            const resTime = new Date(res.reservationTime || (res.date + 'T12:00:00'));
+            const today = new Date();
+            today.setHours(0,0,0,0);
+            const comp = new Date(resTime);
+            comp.setHours(0,0,0,0);
+            const isToday = (comp.getTime() === today.getTime());
+            const isAdmin = document.querySelector('.container').classList.contains('admin-mode');
+            const showSDA = isToday && !res.isSameDay && !isAdmin && (res.status === 'PENDING');
+
             detailsViewContent.className = 'details-active';
             detailsViewContent.innerHTML = `
                 <div class="details-header">
@@ -630,9 +661,11 @@
                     <div class="info-item"><label>Phone</label><value>${res.phone || 'NOT PROVIDED'}</value></div>
                     <div class="info-item"><label>Email</label><value>${res.memberEmail || 'N/A'}</value></div>
                     ${res.status === 'ARRIVED' && res.tableNumber ? `<div class="info-item"><label>Assigned Table</label><value>TABLE ${res.tableNumber}</value></div>` : ''}
+                    ${res.isSameDay ? `<div class="info-item"><label>Arrival Alert</label><value style="color:#ff9d00; font-weight:900;">ON THE WAY</value></div>` : ''}
                 </div>
                 <div class="details-actions">
                     <button class="btn-cyber" onclick="window.openResMenu(event, '${res.id}', '${res.date}', '${res.time}')">EDIT</button>
+                    ${showSDA ? `<button class="btn-sda" onclick="window.headingNow('${res.id}')">I'M HEADING THERE NOW!</button>` : ''}
                 </div>
             `;
         }

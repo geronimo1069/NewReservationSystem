@@ -565,6 +565,28 @@ header {
     box-shadow: 0 0 15px var(--gold-glow);
 }
 
+/* SAME DAY ARRIVAL — orange theme (mirrors .status-orange in poolmgr.css) */
+.res-item.sda {
+    border-left-color: #ff9d00 !important;
+    border-color: rgba(255, 157, 0, 0.4);
+    background: rgba(255, 157, 0, 0.06);
+    box-shadow: 0 0 20px rgba(255, 157, 0, 0.35);
+}
+
+.res-item.sda:hover {
+    background: rgba(255, 157, 0, 0.12);
+    border-color: rgba(255, 157, 0, 0.7);
+}
+
+.res-item.sda .res-info h4 {
+    color: #ff9d00;
+    text-shadow: 0 0 8px rgba(255, 157, 0, 0.5);
+}
+
+.res-item.sda .res-date-box .indicator {
+    color: #ff9d00;
+}
+
 .res-date-box {
     text-align: center;
     line-height: 1.1;
@@ -587,9 +609,37 @@ header {
     font-weight: 600;
 }
 
-.res-tag-today {
-    background: var(--red);
+.btn-sda {
+    background: linear-gradient(135deg, #ff9d00, #ff4e00);
     color: white;
+    border: none;
+    padding: 12px 15px;
+    border-radius: 6px;
+    font-weight: 900;
+    font-size: 0.8rem;
+    cursor: pointer;
+    width: 100%;
+    margin-top: 15px;
+    box-shadow: 0 4px 15px rgba(255, 157, 0, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-sda:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 157, 0, 0.6);
+    filter: brightness(1.1);
+}
+
+.btn-sda:active {
+    transform: translateY(0);
+}
+
+.res-tag-today, .res-tag-sda {
+    background: #ff9d00;
+    color: #0f111a;
     font-size: 0.5rem;
     font-weight: 900;
     padding: 1px 5px;
@@ -600,10 +650,17 @@ header {
     top: -10px;
     left: 50%;
     transform: translateX(-50%);
-    box-shadow: 0 2px 4px rgba(255, 0, 0, 0.4);
-    border: 1px solid var(--gold);
+    box-shadow: 0 2px 6px rgba(255, 157, 0, 0.6);
+    border: 1px solid rgba(255, 157, 0, 0.5);
     z-index: 2;
     white-space: nowrap;
+}
+
+.res-tag-sda {
+    background: #ff4e00; /* slightly deeper orange/red for "Heading Now" alert? */
+    color: white;
+    box-shadow: 0 2px 10px rgba(255, 78, 0, 0.8);
+    border-color: #ff4e00;
 }
 
 .res-date {
