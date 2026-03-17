@@ -775,7 +775,7 @@
                 <option value="" disabled selected>Select Category...</option>
                 <option value="Cue/Case/Accessory Sale">Cue / Case / Accessory Sale</option>
                 <option value="VIP SWAG">VIP SWAG</option>
-                <option value="Table/Player Adjustment">Table / Player Adjustment</option>
+                <option value="Table/Player Adjustment">Pool Play Adjustment (Table #)</option>
                 <option value="Custom">Custom</option>
             </select>
             <div id="adjTableRow" class="hid-none mb-10">
@@ -789,8 +789,8 @@
                     title="Custom Adjustment Description">
             </div>
             <div class="text-muted mb-5 u-b728e98b" style="margin-top:14px;">Amount ($)</div>
-            <input type="text" id="adjAmount" class="adj-input" placeholder="0.00 (Positive Number)" inputmode="decimal"
-                oninput="this.value = this.value.replace(/[^0-9.]/g, '')" title="Adjustment Amount">
+            <input type="text" id="adjAmount" class="adj-input" placeholder="0.00 (+ or -)" inputmode="decimal"
+                oninput="this.value = this.value.replace(/[^-0-9.]/g, '')" title="Adjustment Amount">
             <button class="btn-submit-adj" onclick="addAdjustment()">LOG REVENUE ADJ</button>
         </div>
         <h3 class="mt-30 border-b text-neon-orange">CASH
@@ -851,7 +851,7 @@
     <div id="holo-panel">
         <div class="u-e89792c7">
 
-            <button onclick="openStaffForm()" class="u-a92f02a2">
+            <button onclick="showManualResNotice()" class="u-a92f02a2">
                 +
             </button>
 
@@ -2305,14 +2305,14 @@
                 btn.style.color = "var(--vegas-gold)";
                 title.innerText = "SCHEDULE MATCH";
                 title.style.color = "var(--vegas-gold)";
-                timeDiv.style.display = "block"; // <--- SHOW TIME INPUT
+                timeDiv.classList.remove('hid-none'); // <--- SHOW TIME INPUT
             } else {
                 btn.innerText = "ASSIGN MATCH NOW";
                 btn.style.borderColor = "#555";
                 btn.style.color = "white";
                 title.innerText = "CREATE MATCH";
                 title.style.color = "var(--vegas-gold)";
-                timeDiv.style.display = "none"; // <--- HIDE TIME INPUT
+                timeDiv.classList.add('hid-none'); // <--- HIDE TIME INPUT
             }
             renderScheduledMatches();
         }
@@ -2467,8 +2467,8 @@
 
             const colors = {
                 success: { bg: 'rgba(0,230,118,0.15)', border: '#00e676', text: '#00e676' },
-                error:   { bg: 'rgba(255,42,109,0.15)',  border: '#ff2a6d', text: '#ff2a6d' },
-                warn:    { bg: 'rgba(255,200,0,0.15)',   border: '#ffc800', text: '#ffc800' }
+                error: { bg: 'rgba(255,42,109,0.15)', border: '#ff2a6d', text: '#ff2a6d' },
+                warn: { bg: 'rgba(255,200,0,0.15)', border: '#ffc800', text: '#ffc800' }
             };
             const c = colors[type] || colors.success;
 
@@ -2739,7 +2739,12 @@
         function openAdjustments() {
             renderAdjustmentPanel();
             document.getElementById('adjustmentPanel').classList.add('open');
-            document.getElementById('ownerPurchaseSection').style.display = (currentStaff === 'Jim') ? 'block' : 'none';
+            const ownerSect = document.getElementById('ownerPurchaseSection');
+            if (currentStaff === 'Jim') {
+                ownerSect.classList.remove('hid-none');
+            } else {
+                ownerSect.classList.add('hid-none');
+            }
             // Show Jim's Money checkbox only when Jim is logged in
             const jimRow = document.getElementById('jimMoneyRow');
             if (jimRow) jimRow.style.display = (currentStaff === 'Jim') ? 'flex' : 'none';
@@ -2761,8 +2766,18 @@
 
         function handleAdjCategoryChange() {
             const cat = document.getElementById('adjCategory').value;
-            document.getElementById('adjTableRow').style.display = (cat === 'Table/Player Adjustment') ? 'block' : 'none';
-            document.getElementById('adjCustomRow').style.display = (cat === 'Custom') ? 'block' : 'none';
+            const tableRow = document.getElementById('adjTableRow');
+            const customRow = document.getElementById('adjCustomRow');
+
+            // Reset visibility
+            tableRow.classList.add('hid-none');
+            customRow.classList.add('hid-none');
+
+            if (cat === 'Table/Player Adjustment') {
+                tableRow.classList.remove('hid-none');
+            } else if (cat === 'Custom') {
+                customRow.classList.remove('hid-none');
+            }
         }
 
         function addAdjustment() {
@@ -2770,8 +2785,8 @@
             if (!cat) return alert("Please select a category.");
             const amtStr = document.getElementById('adjAmount').value;
             if (!amtStr) return alert("Enter an amount.");
-            const rawAmount = parseFloat(amtStr);
-            const amount = Math.abs(rawAmount);
+            const amount = parseFloat(amtStr);
+            if (isNaN(amount)) return alert("Invalid amount.");
 
             let desc = cat;
             if (cat === 'Table/Player Adjustment') {
@@ -2790,8 +2805,8 @@
             document.getElementById('adjAmount').value = '';
             document.getElementById('adjTable').value = '';
             document.getElementById('adjCustomDesc').value = '';
-            document.getElementById('adjTableRow').style.display = 'none';
-            document.getElementById('adjCustomRow').style.display = 'none';
+            document.getElementById('adjTableRow').classList.add('hid-none');
+            document.getElementById('adjCustomRow').classList.add('hid-none');
             saveData();
             renderAdjustmentPanel();
         }
@@ -3456,7 +3471,15 @@
         let miscEventConfig = { tables: [] };
         function openMiscEventModal() { document.getElementById('miscEventOverlay').classList.add('active'); miscEventConfig = { tables: [] }; document.getElementById('miscEventPrice').value = '0.00'; document.getElementById('miscEventSelect').value = 'LI Pool 10 Ball League'; checkMiscCustom(); renderMiscTableGrid(); }
         function closeMiscEventModal() { document.getElementById('miscEventOverlay').classList.remove('active'); }
-        function checkMiscCustom() { const sel = document.getElementById('miscEventSelect'); const inp = document.getElementById('miscEventCustomInput'); if (sel.value === 'Custom') { inp.style.display = 'block'; } else { inp.style.display = 'none'; } }
+        function checkMiscCustom() {
+            const sel = document.getElementById('miscEventSelect');
+            const inp = document.getElementById('miscEventCustomInput');
+            if (sel.value === 'Custom') {
+                inp.classList.remove('hid-none');
+            } else {
+                inp.classList.add('hid-none');
+            }
+        }
         function toggleMiscTable(tId) { if (miscEventConfig.tables.includes(tId)) { miscEventConfig.tables = miscEventConfig.tables.filter(id => id !== tId); } else { miscEventConfig.tables.push(tId); } renderMiscTableGrid(); }
         function renderMiscTableGrid() { const grid = document.getElementById('miscTableGrid'); grid.innerHTML = ''; for (let i = 1; i <= TOTAL_TABLES; i++) { const btn = document.createElement('button'); btn.className = 'btn-table-select'; btn.innerText = i; if (tableData[i].players.length > 0 || tableData[i].isHold) { btn.disabled = true; btn.style.borderColor = '#444'; btn.style.color = '#555'; } if (miscEventConfig.tables.includes(i)) { btn.classList.add('selected'); } btn.onclick = () => toggleMiscTable(i); grid.appendChild(btn); } }
         async function submitMiscEvent() {
@@ -3955,9 +3978,12 @@
             currentResCandidate = null;
         }
 
-        function openStaffForm() {
-            const url = 'https://docs.google.com/forms/d/e/1FAIpQLSetKYBeD6ms_mC2GJEMjtxTboq7zGgBuQe3kePS6Svq190qiQ/viewform?usp=header';
-            window.open(url, '_blank');
+        function showManualResNotice() {
+            document.getElementById('manualResNoticeOverlay').classList.add('active');
+        }
+
+        function closeManualResNotice() {
+            document.getElementById('manualResNoticeOverlay').classList.remove('active');
         }
 
         // --- ACTION MODAL LOGIC ---
@@ -3985,7 +4011,7 @@
                     sel.value = 'Custom';
                     const customIn = document.getElementById('miscEventCustomInput');
                     customIn.value = resItem.title;
-                    customIn.style.display = 'block';
+                    customIn.classList.remove('hid-none');
                 }
                 // Pre-fill notes and price
                 document.getElementById('miscEventPrice').value = resItem.price || '0.00';
@@ -4264,6 +4290,22 @@
                 <button class="res-action-btn modal-btn-secondary" id="btnCancelModify">BACK</button>
                 <button class="res-action-btn btn-action-modify modal-btn-primary" id="btnSaveModify">SAVE</button>
             </div>
+        </div>
+    </div>
+
+    <!-- MANUAL RESERVATION NOTICE MODAL -->
+    <div id="manualResNoticeOverlay" class="move-overlay" style="z-index: 10000;">
+        <div class="league-section"
+            style="width: 500px; text-align: center; padding: 40px; border: 2px solid var(--neon-blue); border-radius: 15px; background: #161922; box-shadow: 0 0 30px rgba(5, 217, 232, 0.3);">
+            <div style="font-size: 3rem; color: var(--neon-blue); margin-bottom: 20px;">⚠️</div>
+            <h2 class="vegas-gold" style="font-size: 1.8rem; margin-bottom: 20px;">NOTICE</h2>
+            <p style="font-size: 1.2rem; color: white; line-height: 1.6; margin-bottom: 30px;">
+                We no longer are doing manual reservations. <br><br>
+                Please notify all customers that all reservations must be made via the <strong>VIP Billiards
+                    website</strong>.
+            </p>
+            <button class="btn btn-ctrl" onclick="closeManualResNotice()"
+                style="border-color: var(--neon-blue); color: var(--neon-blue); width: 100%;">UNDERSTOOD</button>
         </div>
     </div>
 </body>
