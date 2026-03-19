@@ -868,7 +868,7 @@
     <script>
         const TOTAL_TABLES = 17; const hourlyRate = 9.00; const nightCap = 30.00; const dayCap = 25.00; const minimumCharge = 5.00; const gracePeriodMins = 5;
         const staffList = ['Jim', 'Chris', 'Laura', 'Danielle', 'Lauren', 'Tamara', 'Brooke', 'Kristel'];
-        const DAY_CUTOFF_HOUR = 18; const PIZZA_TIME_SECONDS = 540;
+        const DAY_CUTOFF_HOUR = 15.25; const SENIOR_CUTOFF_HOUR = 17; const PIZZA_TIME_SECONDS = 540; const MIGRATION_HOUR = 18;
 
         let LEAGUES = { mon: { name: "APA 8 Ball East (Monday)", teams: ["Oh No, Not Them!", "Spanglish", "Odd Squad", "Upside Down Turtles", "Dunton InnMates", "Jilly's"] }, tue: { name: "APA 8 Ball VIP (Tuesday)", teams: ["Pocket Pickers", "Heeere's Johnny", "VIP Crew", "Uncomfortables 8", "YAY Bill", "Shut 'em Down"] } };
         // ============================================================
@@ -918,22 +918,21 @@
         let historyQueue = JSON.parse(localStorage.getItem('vipHistoryQueue') || '[]');
         let isSyncing = false;
         let syncInterval = null;
-        function sendHistoryItem(type, desc, amount, staff) {
+        function sendHistoryItem(type, desc, amount, staff, startTime = null, duration = null) {
             const payload = {
-                uniqueId: Date.now() + Math.random().toString().slice(2, 8), // Dedup ID
+                uniqueId: Date.now() + Math.random().toString().slice(2, 8),
                 type: "HISTORY_LOG",
                 timestamp: new Date(),
                 entryType: type,
                 desc: desc,
                 amount: amount,
-                staff: staff
+                staff: staff,
+                startTime: startTime,
+                duration: duration
             };
 
-            // Add to queue and save
             historyQueue.push(payload);
             localStorage.setItem('vipHistoryQueue', JSON.stringify(historyQueue));
-
-            // Trigger sync attempt immediately
             processQueue();
             updateSyncIndicator();
         }
@@ -3027,35 +3026,67 @@
         function addPlayer() { if (currentOpenTableId === null) return; if (tableData[currentOpenTableId].isHold) return alert("Table is on Hold!"); const players = tableData[currentOpenTableId].players; players.push({ id: Date.now(), name: "Player " + (players.length + 1), startTime: new Date(), rateType: 'standard', isPaid: false, stoppedAt: null }); saveData(); renderPanel(); updateTableCard(currentOpenTableId); }
         function resumePlayer(playerId) { const player = findPlayer(playerId); if (player) { player.stoppedAt = null; saveData(); renderPanel(); updateTableCard(currentOpenTableId); updateLiveValues(); } }
         function removePlayer(playerId) {
-            if (currentOpenTableId === null) return; const player = findPlayer(playerId);
+            if (currentOpenTableId === null) return;
+            const player = findPlayer(playerId);
+
             if (player.rateType === 'event_satellite') return alert("Manage this on the Anchor Table.");
-            if (player.rateType === 'event_anchor') { if (player.linkedTables && player.linkedTables.length > 0) { if (!confirm(`⚠️ CLOSING EVENT ⚠️\n\nThis will clear the Linked Tables: ${player.linkedTables.join(', ')}.\n\nAre you sure everyone is finished?`)) { return; } player.linkedTables.forEach(satId => { tableData[satId].players = []; updateTableCard(satId); }); } }
-            if (!player.isPaid && !player.stoppedAt) { player.stoppedAt = new Date(); saveData(); renderPanel(); return; }
+
+            if (player.rateType === 'event_anchor') {
+                if (player.linkedTables && player.linkedTables.length > 0) {
+                    if (!confirm(`⚠️ CLOSING EVENT ⚠️\n\nThis will clear the Linked Tables: ${player.linkedTables.join(', ')}.\n\nAre you sure everyone is finished?`)) {
+                        return;
+                    }
+                    player.linkedTables.forEach(satId => {
+                        tableData[satId].players = [];
+                        updateTableCard(satId);
+                    });
+                }
+            }
+
+            // Stop the timer if it hasn't been stopped yet
+            if (!player.isPaid && !player.stoppedAt) {
+                player.stoppedAt = new Date();
+                saveData();
+                renderPanel();
+                return;
+            }
 
             const calcs = calculateDue(player);
+            const sessionEnd = player.stoppedAt ? new Date(player.stoppedAt) : new Date();
+
+            // Log to internal transaction list
             transactionLog.push({
                 tableId: currentOpenTableId,
                 name: player.name,
                 rateType: player.rateType,
                 amount: calcs.amount,
                 timeIn: player.startTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                timeOut: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                timeOut: sessionEnd.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 pointsRedeemed: player.redeemed ? 900 : 0
             });
-            sendHistoryItem("TRANSACTION", `Table ${currentOpenTableId} - ${player.name} (${player.rateType})`, calcs.amount, currentStaff);
+
+            // --- SEND TO GOOGLE SHEET HISTORY ---
+            // We use calcs.time directly to avoid the "ReferenceError"
+            sendHistoryItem(
+                "TRANSACTION",
+                `Table ${currentOpenTableId} - ${player.name} (${player.rateType})`,
+                calcs.amount,
+                currentStaff,
+                player.startTime,
+                calcs.time
+            );
 
             // --- LOYALTY & RESERVATION HANDSHAKE ---
-            const sessionEnd = player.stoppedAt ? new Date(player.stoppedAt) : new Date();
             if (player.rateType === 'standard' && window.loyaltyHandshake) {
-                // Pass the resKey so it can archive the stats!
                 window.loyaltyHandshake(player.email, player.startTime, sessionEnd, currentOpenTableId, calcs.amount, player.resKey, player.redeemed);
             } else if (player.resKey && window.markReservationStatus) {
-                // Fallback if it's a non-standard rate but had a reservation
                 window.markReservationStatus(player.resKey, 'COMPLETED');
             }
 
             tableData[currentOpenTableId].players = tableData[currentOpenTableId].players.filter(p => p.id !== playerId);
-            saveData(); renderPanel(); updateTableCard(currentOpenTableId);
+            saveData();
+            renderPanel();
+            updateTableCard(currentOpenTableId);
         }
 
         function togglePaid(playerId) { const player = findPlayer(playerId); if (player) { player.isPaid = !player.isPaid; saveData(); renderPanel(); updateTableCard(currentOpenTableId); } }
@@ -3073,7 +3104,7 @@
                 saveData(); renderPanel(); updateLiveValues();
             }
         }
-        function changeRate(playerId, newRate) { const player = findPlayer(playerId); if (player) { player.rateType = newRate; if (newRate === 'league' || newRate === 'league_practice') { if (player.leagueFee === null || player.leagueFee === undefined) { player.leagueFee = 25.00; } } if (newRate === 'standard') { player.isPaid = false; } saveData(); renderPanel(); updateTableCard(currentOpenOpenTableId); updateLiveValues(); } }
+        function changeRate(playerId, newRate) { const player = findPlayer(playerId); if (player) { player.rateType = newRate; if (newRate === 'league' || newRate === 'league_practice') { if (player.leagueFee === null || player.leagueFee === undefined) { player.leagueFee = 25.00; } } if (newRate === 'standard') { player.isPaid = false; } saveData(); renderPanel(); updateTableCard(currentOpenTableId); updateLiveValues(); } }
         function updateLeagueFee(playerId, val) { const player = findPlayer(playerId); if (player && (player.rateType === 'league' || player.rateType === 'league_practice' || player.rateType === 'event_anchor')) { player.leagueFee = parseFloat(val); saveData(); renderPanel(); updateTableCard(currentOpenTableId); } }
         function updateName(playerId, newName) { const player = findPlayer(playerId); if (player) { player.name = newName; saveData(); } }
         function updateStartTime(playerId, newTimeStr) { const player = findPlayer(playerId); if (player && newTimeStr) { const [hours, mins] = newTimeStr.split(':'); const newDate = new Date(player.startTime); newDate.setHours(hours); newDate.setMinutes(mins); player.startTime = newDate; saveData(); renderPanel(); updateTableCard(currentOpenTableId); updateLiveValues(); } }
@@ -3085,108 +3116,137 @@
 
             let amount = 0;
             let timeStr = "";
+            const now = player.stoppedAt ? new Date(player.stoppedAt) : new Date();
+            const diffMs = now - player.startTime;
+            const diffMinutes = Math.floor(diffMs / (1000 * 60));
+            const diffHours = diffMs / (1000 * 60 * 60);
+            const durationLabel = diffMinutes + "m";
 
-            if (player.rateType === 'league' || player.rateType === 'league_practice') { amount = (player.leagueFee !== null && player.leagueFee !== undefined) ? player.leagueFee : 25.00; timeStr = "LEAGUE"; }
-            else if (player.rateType === 'event_anchor') { amount = player.leagueFee || 0.00; timeStr = "EVENT"; }
-            else if (player.rateType === 'event_satellite') { return { amount: "0.00", time: "LINKED", baseAmount: "0.00" }; }
-            else if (player.rateType === 'senior') { amount = 10.00; timeStr = "--"; }
-            else if (player.rateType === 'all_day') { amount = 25.00; timeStr = "ALL DAY"; }
+            // --- DYNAMIC THRESHOLD (Change 8 to 18 when done testing) ---
+            const testThreshold = MIGRATION_HOUR;
+            const currentHour = now.getHours();
+            const isNightPeriod = (currentHour >= testThreshold || currentHour < 5);
+            const activeCap = isNightPeriod ? nightCap : dayCap;
+
+            if (player.rateType === 'league' || player.rateType === 'league_practice') {
+                amount = (player.leagueFee !== null && player.leagueFee !== undefined) ? player.leagueFee : 25.00;
+                timeStr = durationLabel;
+            }
+            else if (player.rateType === 'event_anchor') {
+                amount = player.leagueFee || 0.00;
+                timeStr = durationLabel;
+            }
+            else if (player.rateType === 'senior') {
+                amount = 10.00;
+                timeStr = durationLabel;
+            }
+            // --- FIXED: Day/Night Specials now use the activeCap ($25 or $30) ---
+            else if (player.rateType === 'all_day') {
+                amount = dayCap;
+                timeStr = durationLabel;
+            }
+            else if (player.rateType === 'night_special') {
+                amount = nightCap;
+                timeStr = durationLabel;
+            }
             else {
-                const now = player.stoppedAt ? new Date(player.stoppedAt) : new Date();
-                const diffMs = now - player.startTime;
-                const diffMinutes = diffMs / (1000 * 60);
-                const diffHours = diffMs / (1000 * 60 * 60);
-                if (diffMinutes < gracePeriodMins) { amount = 0.00; }
-                else {
-                    amount = diffHours * hourlyRate;
-                    amount = Math.ceil(amount * 4) / 4;
-                    if (amount < minimumCharge) amount = minimumCharge;
-                    const startHour = player.startTime.getHours();
-                    const currentCap = startHour < 18 ? dayCap : nightCap;
-                    if (amount > currentCap) amount = currentCap;
+                // STANDARD HOURLY LOGIC
+                if (diffMinutes < gracePeriodMins) {
+                    amount = 0.00;
+                } else {
+                    let baseHourly = diffHours * hourlyRate;
+                    baseHourly = Math.ceil(baseHourly * 4) / 4;
+
+                    if (baseHourly < minimumCharge) {
+                        amount = minimumCharge;
+                    } else {
+                        amount = Math.min(baseHourly, activeCap);
+                    }
                 }
-                timeStr = Math.floor(diffMinutes) + "m";
+                timeStr = durationLabel;
             }
 
-            // --- NEW: Apply Point Redemption Math ---
             const baseAmount = amount;
-            if (player.redeemed) {
-                amount = Math.max(0, amount - 9.00);
-            }
+            if (player.redeemed) amount = Math.max(0, amount - 9.00);
+
             return { amount: amount.toFixed(2), time: timeStr, baseAmount: baseAmount.toFixed(2) };
         }
 
         function updateTableCard(tableId) {
-            const data = tableData[tableId]; const players = data.players; const card = document.getElementById(`card-${tableId}`);
+            const data = tableData[tableId];
+            const players = data.players || [];
+            const card = document.getElementById(`card-${tableId}`);
+            const now = new Date();
+            const currentHour = now.getHours();
 
-            // FLOAT TABLE HANDLING
-            if (tableId === 0) { if (players.length > 0) { card.style.display = 'flex'; } else { card.style.display = 'none'; if (currentOpenTableId === 0) closePanel(); } }
+            // 1. THE HOURLY EXCLUSION RULE:
+            // Only trigger Blue for "Day Specials" (all_day) migrating to "Night Specials" (night_special).
+            // Standard hourly and Senior rates are excluded from turning Blue.
+            const testThreshold = 18; // 6 PM
+            const hasMigrated = players.some(p => {
+                const startHour = p.startTime.getHours();
+                const isCurrentlyNight = (currentHour >= testThreshold || currentHour < 5);
 
-            // BAR TAB RESET
-            if (players.length === 0 && data.hasBarTab) { data.hasBarTab = false; if (currentOpenTableId == tableId) document.getElementById('barTabToggle').checked = false; saveData(); }
-            if (data.hasBarTab) card.classList.add('bar-tab-active'); else card.classList.remove('bar-tab-active');
+                // This is the "Special Only" filter
+                // Updated logic to include Seniors:
+                const isSpecialRate = (p.rateType === 'all_day' || p.rateType === 'night_special' || p.rateType === 'senior');
 
-            // RESET STATUS COLORS
-            if (tableId !== 0) card.classList.remove("status-green", "status-red", "status-orange", "status-hold", "status-pink");
+                return isSpecialRate && startHour < testThreshold && isCurrentlyNight;
+            });
 
-            // HOLD HANDLING
-            if (data.isHold) { card.className = "table-card status-hold"; if (data.hasBarTab) card.classList.add('bar-tab-active'); card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="player-count">HOLD</div><div class="time-display"></div>`; return; }
+            // 2. THE CLEAN SLATE
+            card.className = "table-card";
+            if (tableId === 0) card.classList.add("float-table-card");
 
-            // EMPTY TABLE HANDLING
-            if (players.length === 0) { card.className = tableId === 0 ? "table-card status-active float-table-card" : "table-card status-clear"; if (data.hasBarTab) card.classList.add('bar-tab-active'); card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId === 0 ? 'FLOAT' : tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="player-count" id="count-${tableId}">0</div><div class="time-display" id="time-${tableId}"></div>`; }
-
-            // ACTIVE TABLE HANDLING
-            else {
-                if (tableId !== 0) card.classList.add("status-active");
-
-                // EVENT ANCHOR / SATELLITE CHECKS
-                const isEventAnchor = players.some(p => p.rateType === 'event_anchor'); const isEventSat = players.some(p => p.rateType === 'event_satellite');
-
-                if (isEventAnchor) {
-                    // --- CHANGED: HIDDEN PRICE, SHOW START TIME INSTEAD ---
-                    card.classList.add("status-pink");
-                    card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="league-content-area"><div class="league-label-top u-6e91b930">EVENT ANCHOR</div><div class="league-team-name">${players[0].name}</div></div><div class="time-display u-6e91b930">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
-                }
-                else if (isEventSat) { const anchorId = players[0].anchorId || "?"; card.classList.add("status-pink"); card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="league-content-area"><div class="league-label-top u-6e91b930">LINKED</div><div class="league-team-name">See Table ${anchorId}</div></div><div class="time-display"></div>`; }
-                else {
-                    // LEAGUE & PRACTICE CHECKS
-                    const isLeague = players.some(p => p.rateType === 'league');
-                    const isPractice = players.some(p => p.rateType === 'league_practice');
-
-                    if (isLeague) {
-                        if (players.length >= 2) {
-                            card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="league-content-area"><div class="league-label-top">MATCH</div><div class="league-team-name">${players[0].name}</div><div class="league-vs">v.</div><div class="league-team-name">${players[1].name}</div></div><div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
-                        } else {
-                            card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="league-content-area"><div class="league-label-top">MATCH</div><div class="league-team-name">${players[0].name}</div></div><div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
-                        }
-                    } else if (isPractice) {
-                        card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="league-content-area"><div class="league-label-top u-c20a7047">PRACTICE</div><div class="league-team-name u-92d17336">${players[0].name}</div></div><div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
-                    } else {
-                        // STANDARD WALK-IN VIEW
-                        card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="player-count" id="count-${tableId}">${players.length}</div><div class="time-display" id="time-${tableId}">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
-                    }
-
-                    // STATUS COLORS
-                    const allPaid = players.every(p => p.isPaid); const nonePaid = players.every(p => !p.isPaid); if (tableId !== 0) { if (allPaid) card.classList.add("status-green"); else if (nonePaid) card.classList.add("status-red"); else card.classList.add("status-orange"); }
-                }
-
-                // ADD BAR TAB ICON IF NEEDED
-                if (data.hasBarTab) card.classList.add('bar-tab-active');
+            if (data.isHold) {
+                card.classList.add("status-hold");
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div><div class="player-count">HOLD</div>`;
+                return;
             }
 
-            // --- V8.0: APPEND RESERVATION BADGE ---
-            const pending = scheduledMatches.find(m => m.tableId == tableId);
-            if (pending) {
-                const badge = document.createElement('div');
-                badge.className = 'reserved-badge';
-                badge.innerHTML = `🕒 RESERVED: ${pending.timeLabel}`;
-                card.appendChild(badge);
+            // 3. EMPTY STATE
+            if (players.length === 0) {
+                card.classList.add("status-clear");
+                if (tableId === 0) card.style.display = 'none';
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId === 0 ? 'FLOAT' : tableId}</div></div><div class="player-count">0</div>`;
+            }
+            // 4. ACTIVE STATE
+            else {
+                if (tableId === 0) card.style.display = 'flex';
+                card.classList.add("status-active");
+
+                const allPaid = players.every(p => p.isPaid);
+                const nonePaid = players.every(p => !p.isPaid);
+
+                // --- UPDATED COLOR PRIORITY ---
+                if (players.some(p => p.rateType.includes('event'))) {
+                    card.classList.add("status-pink");
+                }
+                else if (hasMigrated) {
+                    // Only turns Blue if they are on a Special Rate and crossed the 6pm line
+                    card.classList.add("status-blue");
+                }
+                else if (allPaid) {
+                    card.classList.add("status-green");
+                }
+                else if (nonePaid) {
+                    card.classList.add("status-red");
+                }
+                else {
+                    card.classList.add("status-orange");
+                }
+
+                // RENDER PLAYER COUNT
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div><div class="player-count">${players.length}</div><div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
             }
         }
 
         function renderPanel() {
             const container = document.getElementById('playersContainer'); container.innerHTML = '';
-            const players = tableData[currentOpenTableId].players; let tableTotal = 0; const currentHour = new Date().getHours(); const isDayOver = currentHour >= DAY_CUTOFF_HOUR; const disableAttr = isDayOver ? 'disabled' : '';
+            const players = tableData[currentOpenTableId].players; let tableTotal = 0;
+            const now = new Date(); const decimalHour = now.getHours() + (now.getMinutes() / 60);
+            const disableDaySpl = decimalHour >= DAY_CUTOFF_HOUR ? 'disabled' : '';
+            const disableSenior = decimalHour >= SENIOR_CUTOFF_HOUR ? 'disabled' : '';
             const btnHold = document.getElementById('btnHoldTable'); const isHold = tableData[currentOpenTableId].isHold;
             if (isHold) { btnHold.innerText = "RELEASE HOLD"; btnHold.classList.add('active'); container.innerHTML = `<div class="u-ead6c997">TABLE IS RESERVED / ON HOLD</div>`; document.getElementById('btnAddRegular').style.display = 'none'; return; } else { btnHold.innerText = "HOLD TABLE"; btnHold.classList.remove('active'); }
 
@@ -3376,7 +3436,7 @@
                             paymentHtml = amountDisplayHtml + actionButtons;
                         }
                     }
-                    container.innerHTML += `<div class="player-row ${rowClass}"><div class="player-header"><input class="name-input" value="${player.name}" oninput="updateName(${player.id}, this.value)" title="Player Name" placeholder="Player Name">${statusHtml}</div><div class="player-stats"><div>In: <input type="time" class="time-input" value="${player.startTime.getHours().toString().padStart(2, '0')}:${player.startTime.getMinutes().toString().padStart(2, '0')}" onchange="updateStartTime(${player.id}, this.value)" title="Start Time" placeholder="HH:MM"></div><div id="time-${player.id}">Time: ${calcs.time}</div></div><div class="rate-selector"><button class="${getBtnClass('standard')}" onclick="changeRate(${player.id}, 'standard')">Hourly</button><button class="${getBtnClass('senior')}" ${disableAttr} onclick="changeRate(${player.id}, 'senior')">Senior</button><button class="${getBtnClass('all_day')}" ${disableAttr} onclick="changeRate(${player.id}, 'all_day')">Day Spl</button></div><div class="payment-area u-0adff40a">${paymentHtml}</div><div class="btn-row">${undoHtml}<button class="${btnClass}" onclick="removePlayer(${player.id})">${btnLabel}</button><button class="btn-move" onclick="openMoveModal(${player.id})">Move</button></div></div>`;
+                    container.innerHTML += `<div class="player-row ${rowClass}"><div class="player-header"><input class="name-input" value="${player.name}" oninput="updateName(${player.id}, this.value)" title="Player Name" placeholder="Player Name">${statusHtml}</div><div class="player-stats"><div>In: <input type="time" class="time-input" value="${player.startTime.getHours().toString().padStart(2, '0')}:${player.startTime.getMinutes().toString().padStart(2, '0')}" onchange="updateStartTime(${player.id}, this.value)" title="Start Time" placeholder="HH:MM"></div><div id="time-${player.id}">Time: ${calcs.time}</div></div><div class="rate-selector"><button class="${getBtnClass('standard')}" onclick="changeRate(${player.id}, 'standard')">Hourly</button><button class="${getBtnClass('senior')}" ${disableSenior} onclick="changeRate(${player.id}, 'senior')">Senior</button><button class="${getBtnClass('all_day')}" ${disableDaySpl} onclick="changeRate(${player.id}, 'all_day')">Day Spl</button></div><div class="payment-area u-0adff40a">${paymentHtml}</div><div class="btn-row">${undoHtml}<button class="${btnClass}" onclick="removePlayer(${player.id})">${btnLabel}</button><button class="btn-move" onclick="openMoveModal(${player.id})">Move</button></div></div>`;
                 }
             });
             document.getElementById('panelTotal').innerText = `Total Due: $${tableTotal.toFixed(2)}`;

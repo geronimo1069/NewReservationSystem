@@ -3271,3 +3271,19 @@ input[type="checkbox"] {
     font-size: 0.7rem;
     border-radius: 3px;
 }
+
+/* Migration Blue - Day to Night Crossover */
+.table-card.status-blue {
+    background: rgba(0, 150, 255, 0.15);
+    border: 2px solid #00d4ff;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
+}
+
+.table-card.status-blue .table-id {
+    color: #00d4ff;
+    text-shadow: 0 0 5px #00d4ff;
+}
+
+.table-card.status-blue .player-count {
+    color: #fff;
+}
