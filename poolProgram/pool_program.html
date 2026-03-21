@@ -514,9 +514,9 @@
         <!-- Mode Toggles -->
         <div style="display: flex; gap: 5px; padding: 0 15px; margin-bottom: 20px;">
             <button id="btnMiscModeActive" class="btn btn-panel-action w-100 active" onclick="setMiscMode('ACTIVE')"
-                style="background:var(--event-pink); color:white; border:none;">ACTIVE ASSIGN</button>
+                style="background:var(--event-pink); color:white; border:none;">CREATE EVENT</button>
             <button id="btnMiscModeSchedule" class="btn btn-panel-action w-100" onclick="setMiscMode('SCHEDULE')"
-                style="background:#222; color:#888; border:1px solid #444;">SCHEDULE FUTURE</button>
+                style="background:#222; color:#888; border:1px solid #444;">CREATE FUTURE EVENT</button>
         </div>
 
         <!-- SECTION 1: ACTIVE ASSIGNMENT -->
@@ -1328,6 +1328,11 @@
                         stats: getStats(),
                         tables: tableData,
                         expenses: expenseLog,
+                        // Add Time OUT values for each staff member who worked
+                        staffHistory: staffHistory.map(s => ({
+                            ...s,
+                            timeOut: document.getElementById(`out-${s.name}`) ? document.getElementById(`out-${s.name}`).value : ""
+                        })),
                         // These keys MUST match the Apps Script below
                         financials: {
                             lotto: lottoVal,
@@ -1335,8 +1340,7 @@
                             zCash: zCashVal,
                             cc: ccVal,
                             drop: finalDrop
-                        },
-                        staffHistory: staffHistory
+                        }
                     };
 
                     updateSyncIndicator();
@@ -3222,7 +3226,7 @@
                     const isAnchor = players[0].rateType === 'event_anchor';
                     const anchorLabel = isAnchor ? "EVENT" : "LINKED";
                     const anchorName = isAnchor ? players[0].name : `TO TABLE ${players[0].anchorId || '?'}`;
-                    
+
                     centerHtml = `<div class="league-content-area">
                         <div class="league-label-top" style="color:var(--event-pink);">${anchorLabel}</div>
                         <div class="league-team-name">${anchorName}</div>

@@ -1,0 +1,285 @@
+function doGet(e) {
+  try {
+    var params = (e && e.parameter) ? e.parameter : {};
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    const page = (e && e.parameter && e.parameter.page) ? e.parameter.page : 
+             (params.action ? null : 'viewer');
+
+    if (page === 'viewer') {
+      return HtmlService.createHtmlOutputFromFile('viewer')
+        .setTitle('VIP Live Viewer');
+    }
+
+    if (params.action === 'setBaseline') {
+      var baseline = parseFloat(params.baseline) || 0;
+      PropertiesService.getScriptProperties().setProperty('vipRevenueBaseline', baseline.toString());
+      return createResponse({ status: "success", baseline: baseline }, params.callback);
+    }
+
+    if (params.action === 'setPeakVelocity') {
+      var rate = parseFloat(params.rate) || 0;
+      var stored = parseFloat(PropertiesService.getScriptProperties().getProperty('vipPeakVelocity') || 0);
+      if (rate > stored) {
+        PropertiesService.getScriptProperties().setProperty('vipPeakVelocity', rate.toString());
+      }
+      return createResponse({ status: "success", peakVelocity: Math.max(rate, stored) }, params.callback);
+    }
+
+    if (params.action === 'resetPeak') {
+      PropertiesService.getScriptProperties().setProperty('vipPeakVelocity', '0');
+      return createResponse({ status: "success" }, params.callback);
+    }
+
+    if (params.action === 'getCurrentState') {
+      var liveSheet = ss.getSheetByName('LiveState');
+      if (!liveSheet) return createResponse({ status: "error", message: "LiveState sheet not found" }, params.callback);
+      var rawState = liveSheet.getRange('A1').getValue();
+      if (!rawState) return createResponse({ status: "error", message: "No cloud state found" }, params.callback);
+      try {
+        var state = JSON.parse(rawState);
+        return createResponse(state, params.callback);
+      } catch (err) {
+        return createResponse({ status: "error", message: "Cloud state parse error" }, params.callback);
+      }
+    }
+
+    if (params.action === 'getLeagues') {
+      var leagueSheet = ss.getSheetByName('Leagues');
+      if (!leagueSheet) return createResponse({ status: "error", message: "Leagues sheet not found" }, params.callback);
+      var values = leagueSheet.getDataRange().getValues();
+      var leaguesData = {};
+      var dayCounters = {};
+      for (var i = 1; i < values.length; i++) {
+        var row = values[i];
+        var leagueName = row[0] ? row[0].toString().trim() : '';
+        var teamName = row[1] ? row[1].toString().trim() : '';
+        var fee = parseFloat(row[2]) || 0;
+        var unpaidDues = parseFloat(row[9]) || 0;
+        var unpaidNote = row[10] ? row[10].toString().trim() : '';
+        var dayOfWeek = row[11] ? row[11].toString().trim() : '';
+        if (!leagueName || !teamName) continue;
+        var dayKey = getDayKey(dayOfWeek);
+        var leagueKey = null;
+        for (var existingKey in leaguesData) {
+          if (leaguesData[existingKey].name === leagueName && existingKey.indexOf(dayKey) === 0) {
+            leagueKey = existingKey;
+            break;
+          }
+        }
+        if (!leagueKey) {
+          if (!dayCounters[dayKey]) dayCounters[dayKey] = 1;
+          else dayCounters[dayKey]++;
+          leagueKey = dayKey + dayCounters[dayKey];
+        }
+        if (!leaguesData[leagueKey]) {
+          leaguesData[leagueKey] = { name: leagueName, day: dayOfWeek, teams: [], fee: fee };
+        }
+        leaguesData[leagueKey].teams.push({ name: teamName, unpaidDues: unpaidDues, unpaidNote: unpaidNote });
+      }
+      return createResponse(leaguesData, params.callback);
+    }
+
+    if (params.action === 'getViewerData') {
+      var response = { live: {}, history: null };
+      var liveSheet2 = ss.getSheetByName('LiveState');
+      if (liveSheet2) {
+        var rawData = liveSheet2.getRange('A1').getValue();
+        if (rawData) {
+          try { response.live = JSON.parse(rawData); } catch (err2) { response.live = { error: "Parse Error" }; }
+        }
+      }
+      var logSheet = ss.getSheetByName('DailyLogs');
+      if (logSheet && logSheet.getLastRow() > 1) {
+        var latestRow = logSheet.getRange(2, 1, 1, 13).getValues()[0];
+        response.history = {
+          date: latestRow[0], gross: latestRow[2], poolRevenue: latestRow[5],
+          barRevenue: latestRow[6], dayPlayers: latestRow[9], nightPlayers: latestRow[10]
+        };
+      }
+      return createResponse(response, params.callback);
+    }
+
+    if (params.action === 'getLiveState') {
+      var liveSheet = ss.getSheetByName('LiveState');
+      if (!liveSheet) return createResponse({ status: "error", message: "LiveState sheet not found" }, params.callback);
+      var rawState = liveSheet.getRange('A1').getValue();
+      if (!rawState) return createResponse({ status: "error", message: "No state found" }, params.callback);
+      try {
+        var state = JSON.parse(rawState);
+        var props = PropertiesService.getScriptProperties();
+        state.baselineRevenue = parseFloat(props.getProperty('vipRevenueBaseline') || '0');
+        state.peakVelocity = parseFloat(props.getProperty('vipPeakVelocity') || '0');
+      // --- Append Previous Day from DailyLogs ---
+try {
+  var logSheet = ss.getSheetByName("DailyLogs");
+  if (logSheet && logSheet.getLastRow() >= 2) {
+    var prevRow = logSheet.getRange(2, 1, 1, 11).getValues()[0];
+    state.prevDay = {
+      gross:  prevRow[2],
+      pool:   prevRow[5],
+      bar:    prevRow[6],
+      day:    prevRow[9],
+      night:  prevRow[10]
+    };
+  }
+} catch(e2) {}
+        return createResponse(state, params.callback);
+      } catch (err) {
+        return createResponse({ status: "error", message: "Parse error" }, params.callback);
+      }
+    }
+
+    return createResponse({
+      status: "success",
+      message: "VIP Billiards API Ready",
+      actions: ["getCurrentState", "getLeagues", "getViewerData", "getLiveState", "setBaseline", "setPeakVelocity"]
+    }, params.callback);
+
+  } catch (error) {
+    var cb = (e && e.parameter && e.parameter.callback) ? e.parameter.callback : null;
+    return createResponse({ status: "error", message: error.toString() }, cb);
+  }
+}
+
+function createResponse(jsonObject, callback) {
+  var json = JSON.stringify(jsonObject);
+  if (callback) {
+    var output = ContentService.createTextOutput(callback + "(" + json + ");");
+    output.setMimeType(ContentService.MimeType.JAVASCRIPT);
+    return output;
+  }
+  var output = ContentService.createTextOutput(json);
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+function getDayKey(dayOfWeek) {
+  var day = (dayOfWeek || '').toLowerCase();
+  if (day.indexOf('mon') !== -1) return 'mon';
+  if (day.indexOf('tue') !== -1) return 'tue';
+  if (day.indexOf('wed') !== -1) return 'wed';
+  if (day.indexOf('thu') !== -1) return 'thu';
+  if (day.indexOf('fri') !== -1) return 'fri';
+  if (day.indexOf('sat') !== -1) return 'sat';
+  if (day.indexOf('sun') !== -1) return 'sun';
+  return day.substring(0, 3);
+}
+
+function doPost(e) {
+  try {
+    var data = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+    if (data.type === 'CLEAR_TEAM_DUES') {
+      var sheet = ss.getSheetByName('Leagues');
+      if (!sheet) return createCorsResponse({ status: "error", message: "Leagues sheet not found" });
+      var dataRange = sheet.getDataRange();
+      var values = dataRange.getValues();
+      for (var i = 1; i < values.length; i++) {
+        if (values[i][0] === data.leagueName && values[i][1] === data.teamName) {
+          sheet.getRange(i + 1, 10).setValue('');
+          sheet.getRange(i + 1, 11).setValue('');
+          return createCorsResponse({ status: "success", message: "Dues cleared for " + data.teamName });
+        }
+      }
+      return createCorsResponse({ status: "error", message: "Team not found: " + data.leagueName + " / " + data.teamName });
+    }
+
+    if (data.type === 'CLOSE_DAY') {
+      var sheet = ss.getSheetByName("DailyLogs");
+      if (!sheet) sheet = ss.insertSheet("DailyLogs");
+      if (sheet.getLastRow() === 0) {
+        sheet.appendRow(["Date", "ClosedBy", "GrossSales", "Cash", "Credit", "PoolRevenue", "BarRevenue", "Lotto", "CashDrop", "DayPlayers", "NightPlayers", "StaffList", "Notes", "Time OUTs"]);
+      }
+      var now = new Date();
+      if (now.getHours() < 5) { now.setDate(now.getDate() - 1); }
+      var timestamp = Utilities.formatDate(now, Session.getScriptTimeZone(), "M/d/yyyy, h:mm:ss a");
+      var fin = data.financials || {};
+      var sts = data.stats || {};
+      var gross = Number(fin.gross) || 0;
+      var cash = Number(fin.zCash) || 0;
+      var credit = Number(fin.cc) || 0;
+      var lotto = Number(fin.lotto) || 0;
+      var pool = Number(sts.total) || 0;
+      var barRev = gross - pool;
+      var expTotal = 0;
+      if (data.expenses) { data.expenses.forEach(function(e) { expTotal += (Number(e.amount) || 0); }); }
+      var calculatedDrop = cash + lotto - expTotal;
+
+      var staffTimesStr = (data.staffHistory || []).map(function(s) {
+        return s.name + ": " + (s.timeOut || "??");
+      }).join(" / ");
+
+      var rowData = [
+        timestamp, data.staff || "System", gross, cash, credit, pool, barRev,
+        lotto, calculatedDrop, sts.day || 0, sts.night || 0,
+        (data.staffHistory || []).map(function(s) { return s.name; }).join(", "),
+        "v8.8.5 - Staff Out",
+        staffTimesStr
+      ];
+      sheet.insertRowBefore(2);
+      sheet.getRange(2, 1, 1, rowData.length).setValues([rowData]);
+      sheet.getRange(2, 3, 1, 7).setNumberFormat('$0.00');
+
+      PropertiesService.getScriptProperties().setProperties({
+        'vipRevenueBaseline': '0',
+        'vipPeakVelocity': '0'
+      });
+
+      return createCorsResponse({ status: "success", message: "Day closed and baseline reset" });
+    }
+
+    if (data.type === 'HISTORY_LOG') {
+      var historySheet = ss.getSheetByName("History");
+      if (!historySheet) {
+        historySheet = ss.insertSheet("History");
+        historySheet.appendRow(["Date", "Time", "Type", "Description", "Amount", "Staff", "", "", "Start Time", "Closed Time", "Duration"]);
+        historySheet.getRange("1:1").setFontWeight("bold");
+      }
+      
+      var dateObj = new Date(data.timestamp);
+      var dateStr = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "M/d/yyyy");
+      var timeStr = Utilities.formatDate(dateObj, Session.getScriptTimeZone(), "h:mm:ss a");
+
+      var startTimeStr = "";
+      if (data.startTime) {
+        var startObj = new Date(data.startTime);
+        startTimeStr = Utilities.formatDate(startObj, Session.getScriptTimeZone(), "h:mm:ss a");
+      }
+
+      var rowData = [dateStr, timeStr, data.entryType, data.desc, data.amount, data.staff, "", "", startTimeStr, timeStr, data.duration || ""];
+      
+      historySheet.insertRowBefore(2);
+      historySheet.getRange(2, 1, 1, rowData.length).setValues([rowData]);
+      historySheet.getRange(2, 5).setNumberFormat('$0.00');
+      
+      historySheet.getRange(2, 1, historySheet.getLastRow() - 1, historySheet.getLastColumn())
+        .sort([{ column: 1, ascending: false }, { column: 2, ascending: false }]);
+        
+      return createCorsResponse({ status: "success", message: "History Logged" });
+    }
+
+    if (data.type === 'UPDATE' || !data.type) {
+      var sheet = ss.getSheetByName('LiveState');
+      if (!sheet) sheet = ss.insertSheet('LiveState');
+      sheet.getRange('A1').setValue(JSON.stringify(data));
+      return createCorsResponse({ status: "success", message: "State Updated" });
+    }
+
+    return createCorsResponse({ status: "success" });
+
+  } catch (error) {
+    return createCorsResponse({ status: "error", message: error.toString() });
+  }
+}
+
+function createCorsResponse(jsonObject) {
+  var output = ContentService.createTextOutput(JSON.stringify(jsonObject));
+  output.setMimeType(ContentService.MimeType.JSON);
+  return output;
+}
+
+function doOptions(e) {
+  return ContentService.createTextOutput('').setMimeType(ContentService.MimeType.TEXT);
+}
