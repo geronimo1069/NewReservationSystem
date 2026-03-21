@@ -680,6 +680,7 @@ body {
     transition: all 0.2s ease;
     position: relative;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
 }
 
 .table-card:hover {
@@ -792,9 +793,8 @@ body {
     color: var(--vegas-gold);
     font-size: 0.85rem;
     text-align: center;
-    padding: 4px 0;
-    text-transform: uppercase;
-    font-weight: 900;
+    padding: 6px 4px;
+    font-weight: normal;
     border-top: 1px solid var(--vegas-gold);
     letter-spacing: 1px;
     z-index: 10;

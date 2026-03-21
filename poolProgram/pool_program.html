@@ -819,31 +819,6 @@
             </div>
             <button class="btn-submit-exp" onclick="addExpense()">LOG CASH PAYOUT</button>
         </div>
-        <div id="ownerPurchaseSection" class="hid-none mt-30">
-            <h3 class="pb-5 mb-15 text-holo-gold u-b35f297f">
-                👑 OWNER PURCHASE <span class="text-muted text-xs u-6c282809">(History only —
-                    not
-                    deducted from drawer)</span>
-            </h3>
-            <div class="expense-form">
-                <div class="mb-10 text-sm u-c4accc46">Category</div>
-                <select id="ownerExpDesc" class="expense-input w-full bg-dark-well border-holo-gold u-a1db4b2a"
-                    title="Owner Expense Category">
-                    <option value="" disabled selected>Select Category...</option>
-                    <option value="Liquor">Liquor Store</option>
-                    <option value="Beer/Soda">Superstar Beverage</option>
-                    <option value="Supplies">Supplies (Paper/Cleaning)</option>
-                    <option value="Maintenance">Repairs & Maintenance</option>
-                    <option value="Shift Pay">Shift Pay</option>
-                    <option value="Other">Other / Miscellaneous</option>
-                </select>
-                <div class="mb-10 text-sm u-c4accc46">Amount ($)</div>
-                <input type="text" id="ownerExpAmount" class="expense-input" placeholder="0.00 (Positive Number)"
-                    inputmode="decimal" oninput="this.value = this.value.replace(/[^0-9.]/g, '')"
-                    title="Owner Purchase Amount">
-                <button class="btn-submit-exp btn-owner-log" onclick="addOwnerPurchase()">LOG OWNER PURCHASE</button>
-            </div>
-        </div>
         <h3 class="text-white mt-30">Today's Activity Log</h3>
         <div id="adjustmentList"></div>
     </div>
@@ -1662,9 +1637,9 @@
             const tableId = document.getElementById('pracTable').value;
             const leagueKey = document.getElementById('leagueSelector').value;
 
-            if (!tName) return alert("Select team.");
-            if (tableData[tableId].players.length > 0) return alert(`Table ${tableId} busy!`);
-            if (tableData[tableId].isHold) return alert(`Table ${tableId} ON HOLD.`);
+            if (!tName) return showToast("Please select a team.", "error");
+            if (tableData[tableId].players.length > 0) return showToast(`Table ${tableId} is currently busy.`, "error");
+            if (tableData[tableId].isHold) return showToast(`Table ${tableId} is ON HOLD.`, "error");
 
             // Find team object to get fee and unpaid dues
             const teams = LEAGUES[leagueKey].teams;
@@ -1699,14 +1674,14 @@
             updateTableCard(tableId);
             saveData();
 
-            let alertMsg = `Practice Assigned to Table ${tableId}`;
+            let toastMsg = `✓ Practice Assigned to Table ${tableId}`;
             if (unpaidDues > 0) {
-                alertMsg += `\n\n⚠️ This team owes $${unpaidDues}\nTotal to collect: $${totalFee}`;
+                toastMsg += ` | ⚠️ Team owes $${unpaidDues.toFixed(2)}`;
             } else {
-                alertMsg += ` at $${totalFee.toFixed(2)}`;
+                toastMsg += ` | Fee: $${totalFee.toFixed(2)}`;
             }
 
-            alert(alertMsg);
+            showToast(toastMsg, unpaidDues > 0 ? "warn" : "success");
         }
         async function saveData() {
             const state = {
@@ -2465,9 +2440,9 @@
             if (existing) existing.remove();
 
             const colors = {
-                success: { bg: 'rgba(0,230,118,0.15)', border: '#00e676', text: '#00e676' },
-                error: { bg: 'rgba(255,42,109,0.15)', border: '#ff2a6d', text: '#ff2a6d' },
-                warn: { bg: 'rgba(255,200,0,0.15)', border: '#ffc800', text: '#ffc800' }
+                success: { bg: '#000', border: '#00e676', text: '#00e676' },
+                error: { bg: '#000', border: '#ff2a6d', text: '#ff2a6d' },
+                warn: { bg: '#000', border: '#ffc800', text: '#ffc800' }
             };
             const c = colors[type] || colors.success;
 
@@ -2719,7 +2694,7 @@
                 const anchor = players[0].anchorId;
                 // Only lock out if it's a satellite pointing to a DIFFERENT table
                 if (anchor && anchor != tableId) {
-                    alert(`⚠️ ACCESS DENIED ⚠️\n\nTable ${tableId} is linked to the Event on Table ${anchor}.`);
+                    showToast(`⚠️ Table ${tableId} is linked to the Event on Table ${anchor}.`, "error");
                     return;
                 }
             }
@@ -2738,12 +2713,6 @@
         function openAdjustments() {
             renderAdjustmentPanel();
             document.getElementById('adjustmentPanel').classList.add('open');
-            const ownerSect = document.getElementById('ownerPurchaseSection');
-            if (currentStaff === 'Jim') {
-                ownerSect.classList.remove('hid-none');
-            } else {
-                ownerSect.classList.add('hid-none');
-            }
             // Show Jim's Money checkbox only when Jim is logged in
             const jimRow = document.getElementById('jimMoneyRow');
             if (jimRow) jimRow.style.display = (currentStaff === 'Jim') ? 'flex' : 'none';
@@ -2819,7 +2788,7 @@
             if (isOwnerMoney) {
                 // Jim's own money — log it for history only, NOT in expenseLog (won't affect cash drop)
                 ownerPurchaseLog.push({ id: Date.now(), desc, amount, staff: 'Jim', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-                sendHistoryItem("EXPENSE", `[OWNER] ${desc}`, amount, "Jim");
+                sendHistoryItem("OWNER_PURCHASE", `[OWNER] ${desc}`, amount, "Jim");
             } else {
                 // Normal payout from the pool hall drawer
                 expenseLog.push({ id: Date.now(), desc, amount, staff: currentStaff || "System", time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
@@ -2829,18 +2798,6 @@
             document.getElementById('expDesc').value = '';
             document.getElementById('expAmount').value = '';
             if (document.getElementById('expIsOwner')) document.getElementById('expIsOwner').checked = false;
-            saveData();
-            renderAdjustmentPanel();
-        }
-        function addOwnerPurchase() {
-            const desc = document.getElementById('ownerExpDesc').value;
-            const amtStr = document.getElementById('ownerExpAmount').value;
-            if (!desc || !amtStr) return alert("Select a category and enter an amount.");
-            const amount = parseFloat(amtStr);
-            ownerPurchaseLog.push({ id: Date.now(), desc, amount, staff: 'Jim', time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) });
-            sendHistoryItem("EXPENSE", `[OWNER] ${desc}`, amount, "Jim");
-            document.getElementById('ownerExpDesc').value = '';
-            document.getElementById('ownerExpAmount').value = '';
             saveData();
             renderAdjustmentPanel();
         }
@@ -3179,6 +3136,10 @@
             const now = new Date();
             const currentHour = now.getHours();
 
+            // --- V8.1: FIND SCHEDULED MATCH FOR THIS TABLE ---
+            const scheduledMatch = scheduledMatches.find(sm => sm.tableId == tableId);
+            const badgeHtml = scheduledMatch ? `<div class="reserved-badge">${scheduledMatch.team1} vs. ${scheduledMatch.team2}<br>@ ${scheduledMatch.timeLabel}</div>` : '';
+
             // 1. THE HOURLY EXCLUSION RULE:
             // Only trigger Blue for "Day Specials" (all_day) migrating to "Night Specials" (night_special).
             // Standard hourly and Senior rates are excluded from turning Blue.
@@ -3200,7 +3161,7 @@
 
             if (data.isHold) {
                 card.classList.add("status-hold");
-                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div><div class="player-count">HOLD</div>`;
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div><div class="player-count">HOLD</div>${badgeHtml}`;
                 return;
             }
 
@@ -3208,7 +3169,7 @@
             if (players.length === 0) {
                 card.classList.add("status-clear");
                 if (tableId === 0) card.style.display = 'none';
-                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId === 0 ? 'FLOAT' : tableId}</div></div><div class="player-count">0</div>`;
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId === 0 ? 'FLOAT' : tableId}</div></div><div class="player-count">0</div>${badgeHtml}`;
             }
             // 4. ACTIVE STATE
             else {
@@ -3236,8 +3197,40 @@
                     card.classList.add("status-orange");
                 }
 
-                // RENDER PLAYER COUNT
-                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div><div class="player-count">${players.length}</div><div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>`;
+                // --- V8.1: MATCH LINEUP DISPLAY ---
+                // If there are exactly 2 players and both are 'league' rateType, show the team vs team view
+                // OR if it is a single league_practice player, show the team name
+                // OR if it is an event, show the event title
+                const isMatch = (players.length === 2 && players.every(p => p.rateType === 'league'));
+                const isPractice = (players.length === 1 && players[0].rateType === 'league_practice');
+                const isEvent = players.some(p => p.rateType === 'event_anchor' || p.rateType === 'event_satellite');
+
+                let centerHtml = `<div class="player-count">${players.length}</div>`;
+                if (isMatch) {
+                    centerHtml = `<div class="league-content-area">
+                        <div class="league-label-top">LEAGUE</div>
+                        <div class="league-team-name">${players[0].name}</div>
+                        <div class="league-vs">vs</div>
+                        <div class="league-team-name">${players[1].name}</div>
+                    </div>`;
+                } else if (isPractice) {
+                    centerHtml = `<div class="league-content-area">
+                        <div class="league-label-top">PRACTICE</div>
+                        <div class="league-team-name">${players[0].name}</div>
+                    </div>`;
+                } else if (isEvent) {
+                    const isAnchor = players[0].rateType === 'event_anchor';
+                    const anchorLabel = isAnchor ? "EVENT" : "LINKED";
+                    const anchorName = isAnchor ? players[0].name : `TO TABLE ${players[0].anchorId || '?'}`;
+                    
+                    centerHtml = `<div class="league-content-area">
+                        <div class="league-label-top" style="color:var(--event-pink);">${anchorLabel}</div>
+                        <div class="league-team-name">${anchorName}</div>
+                    </div>`;
+                }
+
+                // RENDER CARD
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div>${centerHtml}<div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>${badgeHtml}`;
             }
         }
 
@@ -3519,7 +3512,7 @@
             if (anchorP.linkedTables.includes(targetId)) {
                 anchorP.linkedTables = anchorP.linkedTables.filter(id => id !== targetId); tableData[targetId].players = []; updateTableCard(targetId);
             } else {
-                if (tableData[targetId].players.length > 0) return alert("Table is busy!");
+                if (tableData[targetId].players.length > 0) return showToast(`Table ${targetId} is busy!`, "error");
                 anchorP.linkedTables.push(targetId); tableData[targetId].players.push({ id: Date.now() + Math.random(), name: anchorP.name, startTime: new Date(), rateType: 'event_satellite', isPaid: false, anchorId: anchorId }); updateTableCard(targetId);
             }
             saveData(); renderPanel();
@@ -3547,11 +3540,11 @@
             let eventName = sel.value;
             if (eventName === 'Custom') {
                 eventName = document.getElementById('miscEventCustomInput').value.trim();
-                if (!eventName) return alert("Please enter a Custom Event Name.");
+                if (!eventName) return showToast("Please enter a custom event name.", "error");
             }
             let price = parseFloat(document.getElementById('miscEventPrice').value);
-            if (isNaN(price) || price < 0) return alert("Invalid Price");
-            if (miscEventConfig.tables.length === 0) return alert("Please select at least one table.");
+            if (isNaN(price) || price < 0) return showToast("Invalid Price", "error");
+            if (miscEventConfig.tables.length === 0) return showToast("Please select at least one table.", "error");
 
             const internalNotes = document.getElementById('miscEventInternalNotes').value.trim();
             const publicNotes = document.getElementById('miscEventPublicNotes').value.trim();
@@ -3600,7 +3593,7 @@
             saveData();
             for (let t of miscEventConfig.tables) updateTableCard(t);
             closeMiscEventPanel();
-            alert(`Event Activated!\n\nAnchor: Table ${anchorId}\nLinked: ${satellites.length > 0 ? satellites.join(', ') : 'None'}`);
+            showToast(`✓ Event Activated! Anchor: Table ${anchorId}`, "success");
         }
         function clean(str) { return str ? str.replace(/"/g, '').trim() : ''; }
         function formatTime(str) {
