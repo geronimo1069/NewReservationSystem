@@ -473,8 +473,9 @@
                 }
 
                 const member = memberSnap.data();
-                const isPro = member.tier === 'PRO' || member.tier === 'PAID';
-                window.isProMember = isPro;
+                // Unified VIP Model: Everyone gets PRO features
+                const isPro = true; 
+                window.isProMember = true;
 
                 currentMemberRef = memberRef;
                 currentUser = user;
@@ -876,10 +877,11 @@
             const container = document.getElementById('sameDayContainer');
             if (!container) return;
 
-            const isPro = member.tier === 'PRO' || member.tier === 'PAID';
-            const isSDAEnabled = isPro || MEMBERSHIP_MODE === 'freeVIP';
+            // Unified VIP Model
+            const isPro = true;
+            const isSDAEnabled = true;
             const currentMonth = new Date().toISOString().substring(0, 7);
-            const hasReachedLimit = !isPro && MEMBERSHIP_MODE === 'legacy' && member.lastReservationMonth === currentMonth && (member.reservationCountThisMonth || 0) >= 1;
+            const hasReachedLimit = false; 
             const hasActiveSameDay = activeRes.some(r => r.isSameDay === true && r.status === 'PENDING');
 
             if (hasActiveSameDay) {
@@ -921,12 +923,12 @@
         function renderReserveCard(member) {
             const container = document.getElementById('reserveContent');
             const sub = document.getElementById('reserveSub');
-            const isPro = member.tier === 'PRO' || member.tier === 'PAID';
-            const currentMonth = new Date().toISOString().substring(0, 7);
-            const hasReachedLimit = !isPro && MEMBERSHIP_MODE === 'legacy' && member.lastReservationMonth === currentMonth && (member.reservationCountThisMonth || 0) >= 1;
+            // Unified VIP Model
+            const isPro = true;
+            const hasReachedLimit = false;
 
             if (isPro) {
-                sub.textContent = 'As a VIP member, book up to 7 days in advance — anytime, unlimited.';
+                sub.textContent = 'Book your table up to 7 days in advance — anytime, unlimited.';
                 container.innerHTML = `
                     <button class="btn-reserve-pro" id="btnOpenReservation">
                         🎱 Reserve My Table

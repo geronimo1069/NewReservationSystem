@@ -52,7 +52,7 @@ export const AuthManager = {
         uid: user.uid, // Keep UID as a field for auth reference
         name: user.displayName,
         avatar: user.photoURL,
-        tier: "FREE",
+        tier: "PRO",
         joinedDate: new Date().toISOString(),
 
         /* Loyalty Program Data (Rule: Loyalty Program Info) */

@@ -11,10 +11,8 @@ export const MemberPortal = {
      * @returns {string[]} An array of formatted date strings (e.g., 'Mon, Mar 10').
      */
     getBookingWindow(tier) {
-        const isPro = tier?.toUpperCase() === 'PRO';
-        let windowDays = CONFIG.membership.membershipMode === 'freeVIP'
-            ? CONFIG.membership.advanceBookingDaysFree
-            : CONFIG.membership.advanceBookingDaysFree;
+        // Unified VIP Model: Everyone gets the full booking window
+        let windowDays = CONFIG.membership.advanceBookingDaysFree;
 
 
 
@@ -60,39 +58,7 @@ export const MemberPortal = {
      * @returns {Object} { eligible: boolean, message: string }
      */
     checkEligibility(profile) {
-        if (!profile) {
-            return { eligible: false, message: "Profile not found." };
-        }
-
-        // If using the new freeVIP model → unlimited reservations for everyone
-        if (CONFIG.membership.membershipMode === 'freeVIP') {
-            return { eligible: true, message: "Reservations available." };
-        }
-
-        // --- Legacy Mode Logic ---
-        const tier = profile.tier?.toUpperCase() || 'FREE';
-
-        // Paid tiers always unlimited in legacy mode
-        if (tier === 'PAID' || tier === 'PRO' || tier === 'ADMIN') {
-            return { eligible: true, message: "Unlimited reservations for your tier!" };
-        }
-
-        // Free tier monthly limit (legacy only)
-        const now = new Date();
-        const currentMonth = `${now.getFullYear()}-${(now.getMonth() + 1)
-            .toString()
-            .padStart(2, '0')}`;
-
-        if (
-            profile.lastReservationMonth === currentMonth &&
-            profile.reservationCountThisMonth >= CONFIG.membership.freeTierLimit
-        ) {
-            return {
-                eligible: false,
-                message: "Free tier limit reached (1 reservation per month)."
-            };
-        }
-
+        // Unified VIP Model: Everyone is eligible for unlimited reservations
         return { eligible: true, message: "Reservations available." };
     }
 

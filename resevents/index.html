@@ -387,8 +387,9 @@
                 userNameEl.textContent = profile.name || user.displayName;
                 userEmailEl.textContent = user.email.toUpperCase();
 
-                const userTier = (profile.tier || 'FREE').toUpperCase();
-                userTierEl.textContent = userTier;
+                // Unified VIP Model
+                const userTier = (profile.tier || 'PRO').toUpperCase();
+                userTierEl.textContent = userTier === 'ADMIN' ? 'ADMIN' : 'PRO';
                 userTierEl.className = `user-tier tier-${userTier.toLowerCase()}`;
 
                 // ADMIN CHECK
@@ -411,17 +412,14 @@
                     document.getElementById('stat-points').textContent = (profile.loyaltyPoints || 0).toString().padStart(2, '0');
 
                     const progressContainer = document.getElementById('reward-progress-container');
-                    if (userTier === 'PAID' || userTier === 'PRO' || userTier === 'ADMIN') {
-                        progressContainer.style.display = 'block';
-                        upgradeNudge.style.display = 'none';
-                        const pts = profile.loyaltyPoints || 0;
-                        const progress = (pts % 10) * 10;
-                        document.getElementById('progress-fill').style.width = `${progress}%`;
-                        document.getElementById('progress-text').textContent = `${pts % 10} / 10 PTS`;
-                    } else {
-                        progressContainer.style.display = 'none';
-                        upgradeNudge.style.display = 'block';
-                    }
+                    // Unified Tier Logic: Everyone gets PRO features
+                    progressContainer.style.display = 'block';
+                    upgradeNudge.style.display = 'none';
+
+                    const pts = profile.loyaltyPoints || 0;
+                    const progress = (pts % 10) * 10;
+                    document.getElementById('progress-fill').style.width = `${progress}%`;
+                    document.getElementById('progress-text').textContent = `${pts % 10} / 10 PTS`;
 
                     renderBookingDates(profile.tier);
                     loadMemberReservations(user.email);
