@@ -281,7 +281,7 @@
             const publicNotes = document.getElementById('schedPublicNotes').value.trim();
             const isPublic = document.getElementById('schedPublic').checked;
 
-            if (!title || !date || !startTime) return alert("Please fill in Title, Date, and Start Time.");
+            if (!title || !date || !startTime) return showToast("Please fill in Title, Date, and Start Time.", "error");
 
             try {
                 const eventData = {
@@ -297,13 +297,13 @@
 
                 if (editingEventId) {
                     await updateDoc(doc(db, "events", editingEventId), eventData);
-                    alert("✓ Event Updated!");
+                    showToast("✓ Event Updated!", "success");
                     editingEventId = null;
                     document.getElementById('saveEventBtnText').innerText = "SAVE EVENT RESERVATION";
                 } else {
                     eventData.createdAt = eventData.updatedAt;
                     await addDoc(collection(db, "events"), eventData);
-                    alert("✓ Event Scheduled and Saved!");
+                    showToast("✓ Event Scheduled and Saved!", "success");
                 }
 
                 // Clear form
@@ -314,7 +314,7 @@
                 document.getElementById('schedEnd').value = '';
             } catch (e) {
                 console.error("Save Event Failed:", e);
-                alert("Error saving event.");
+                showToast("Error saving event.", "error");
             }
         };
 
@@ -322,7 +322,7 @@
             if (!confirm("Are you sure you want to delete/cancel this event?")) return false;
             try {
                 await deleteDoc(doc(db, "events", eventId));
-                alert("✓ Event Cancelled/Removed.");
+                showToast("✓ Event Cancelled/Removed.", "success");
                 return true;
             } catch (e) {
                 console.error("Delete Event Failed:", e);
@@ -845,6 +845,38 @@
         const staffList = ['Jim', 'Chris', 'Laura', 'Danielle', 'Lauren', 'Tamara', 'Brooke', 'Kristel'];
         const DAY_CUTOFF_HOUR = 15.25; const SENIOR_CUTOFF_HOUR = 17; const PIZZA_TIME_SECONDS = 540; const MIGRATION_HOUR = 18;
 
+        function customConfirm(message, title, icon) {
+            if (!title) title = "CONFIRM";
+            if (!icon) icon = "!";
+            return new Promise((resolve) => {
+                const overlay = document.getElementById('confirmOverlay');
+                const okBtn = document.getElementById('confirmBtnOk');
+                const cancelBtn = document.getElementById('confirmBtnCancel');
+
+                document.getElementById('confirmMessage').innerText = message;
+                document.getElementById('confirmTitle').innerText = title;
+                document.getElementById('confirmIcon').innerText = icon;
+
+                overlay.classList.add('active');
+
+                const handleOk = () => {
+                    overlay.classList.remove('active');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(true);
+                };
+                const handleCancel = () => {
+                    overlay.classList.remove('active');
+                    okBtn.removeEventListener('click', handleOk);
+                    cancelBtn.removeEventListener('click', handleCancel);
+                    resolve(false);
+                };
+
+                okBtn.addEventListener('click', handleOk, { once: true });
+                cancelBtn.addEventListener('click', handleCancel, { once: true });
+            });
+        }
+
         let LEAGUES = { mon: { name: "APA 8 Ball East (Monday)", teams: ["Oh No, Not Them!", "Spanglish", "Odd Squad", "Upside Down Turtles", "Dunton InnMates", "Jilly's"] }, tue: { name: "APA 8 Ball VIP (Tuesday)", teams: ["Pocket Pickers", "Heeere's Johnny", "VIP Crew", "Uncomfortables 8", "YAY Bill", "Shut 'em Down"] } };
         // ============================================================
         // v8.8.3 CRITICAL SYNC FIXES - PREVENTS GHOST TABLES
@@ -879,6 +911,7 @@
         let tableData = {}; let scheduledMatches = []; let transactionLog = []; let adjustmentLog = []; let expenseLog = []; let staffHistory = []; let ownerPurchaseLog = [];
         let currentOpenTableId = null; let currentStaff = null; let shiftStartTime = null; let shiftStartRevenue = 0; let playerToMoveId = null; let cloudUrl = null;
         let pizzaInterval = null; let pizzaSecondsLeft = PIZZA_TIME_SECONDS; let pizzaRunning = false; let inactivityTime = 0; const INACTIVITY_LIMIT_SEC = 30;
+        let isClosingOut = false; // Guard to prevent double closeout
 
         const PROXY_BASE = 'https://corsproxy.io/?';
 
@@ -1105,7 +1138,10 @@
 
         function closeAllModalsAndPanels() { if (document.getElementById('sidePanel').classList.contains('open')) closePanel(); if (document.getElementById('reportPanel').classList.contains('open')) closeReport(); if (document.getElementById('loginPanel').classList.contains('open')) closeLogin(); if (document.getElementById('adjustmentPanel').classList.contains('open')) closeAdjustments(); if (document.getElementById('leaguePanel').classList.contains('open')) closeLeaguePanel(); if (document.getElementById('moveOverlay').classList.contains('active')) closeMoveModal(); if (document.getElementById('closeDayOverlay').classList.contains('active')) closeCloseDayWizard(); if (document.getElementById('miscEventPanel').classList.contains('open')) closeMiscEventPanel(); if (document.getElementById('holo-panel').classList.contains('active')) { document.getElementById('holo-panel').classList.remove('active'); } }
 
-        function openCloseDayWizard() { let activeTables = []; for (let i = 1; i <= TOTAL_TABLES; i++) { if (tableData[i].players.length > 0) activeTables.push(i); } if (activeTables.length > 0) { alert(`CANNOT CLOSE DAY.\n\nThe following tables are still active:\n${activeTables.join(', ')}\n\nPlease close all tables first.`); return; } const container = document.getElementById('staffShiftList'); container.innerHTML = ''; const uniqueStaff = [...new Map(staffHistory.map(item => [item.name, item])).values()]; if (uniqueStaff.length === 0) { container.innerHTML = '<div class="u-b804283a">No staff logged in today.</div>'; } uniqueStaff.forEach(s => { const timeIn = new Date(s.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const row = document.createElement('div'); row.className = 'staff-time-row'; row.innerHTML = `<div class="u-e26e1c41">${s.name}</div><div class="u-749cff35">In: ${timeIn}</div><input type="text" class="wizard-input u-44ba2b76" placeholder="Time OUT" id="out-${s.name}" onblur="formatTimeInput(this)">`; container.appendChild(row); }); document.getElementById('loginPanel').classList.remove('open'); document.getElementById('wizardContent').style.display = 'flex'; document.getElementById('finalReportView').style.display = 'none'; document.getElementById('closeDayOverlay').classList.add('active'); }
+        function openCloseDayWizard() { let activeTables = []; for (let i = 1; i <= TOTAL_TABLES; i++) { if (tableData[i].players.length > 0) activeTables.push(i); }             if (activeTables.length > 0) {
+                showToast(`CANNOT CLOSE DAY.\n\nThe following tables are still active:\n${activeTables.join(', ')}\n\nPlease close all tables first.`, "error");
+                return;
+            } const container = document.getElementById('staffShiftList'); container.innerHTML = ''; const uniqueStaff = [...new Map(staffHistory.map(item => [item.name, item])).values()]; if (uniqueStaff.length === 0) { container.innerHTML = '<div class="u-b804283a">No staff logged in today.</div>'; } uniqueStaff.forEach(s => { const timeIn = new Date(s.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); const row = document.createElement('div'); row.className = 'staff-time-row'; row.innerHTML = `<div class="u-e26e1c41">${s.name}</div><div class="u-749cff35">In: ${timeIn}</div><input type="text" class="wizard-input u-44ba2b76" placeholder="Time OUT" id="out-${s.name}" onblur="formatTimeInput(this)">`; container.appendChild(row); }); document.getElementById('loginPanel').classList.remove('open'); document.getElementById('wizardContent').style.display = 'flex'; document.getElementById('finalReportView').style.display = 'none'; document.getElementById('closeDayOverlay').classList.add('active'); }
         function formatTimeInput(input) { let val = input.value.trim(); if (!val) return; if (val.includes(':')) return; let num = parseInt(val); if (isNaN(num)) return; let h = 0, m = 0; if (num < 13) { h = num; } else if (num < 2400) { if (num >= 100 && num <= 1259) { let s = val.toString(); h = parseInt(s.substring(0, s.length - 2)); m = parseInt(s.substring(s.length - 2)); } else { let s = val.toString(); if (s.length >= 3) { h = parseInt(s.substring(0, s.length - 2)); m = parseInt(s.substring(s.length - 2)); } } } let suffix = "PM"; if (h === 12) suffix = "PM"; if (h > 12) { h -= 12; suffix = "PM"; } if (h === 0) { h = 12; suffix = "AM"; } input.value = `${h}:${m.toString().padStart(2, '0')} ${suffix}`; }
         function closeCloseDayWizard() { document.getElementById('closeDayOverlay').classList.remove('active'); }
 
@@ -1120,7 +1156,7 @@
 
             // If any field is purely empty (user forgot to type), STOP.
             if (lottoVal === '' || grossVal === '' || zCashVal === '' || ccVal === '') {
-                alert("⚠️ MISSING DATA ⚠️\n\nPlease fill out ALL financial fields.\n\nEnter '0' if the value is zero.");
+                showToast("⚠️ MISSING DATA ⚠️\n\nPlease fill out ALL financial fields.\n\nEnter '0' if the value is zero.", "error");
                 return; // Stop here. Do not generate report.
             }
 
@@ -1296,15 +1332,45 @@
         }
 
         async function finalizeAndWipe() {
+            if (isClosingOut) return; // Prevent double trigger
+            
+            const btn = document.querySelector('.btn.u-cf2cf7da'); // Find the finalize button
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = "PROCESSING...";
+                btn.style.opacity = "0.5";
+                btn.style.cursor = "not-allowed";
+            }
+
             if (historyQueue.length > 0) {
                 await processQueue();
                 if (historyQueue.length > 0) {
                     const confirmForce = confirm(`⚠️ WARNING: INTERNET ISSUE ⚠️\n\nYou have ${historyQueue.length} transactions pending.`);
-                    if (!confirmForce) return;
+                    if (!confirmForce) {
+                        isClosingOut = false;
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerText = "FINALIZE & WIPE DATA";
+                            btn.style.opacity = "1";
+                            btn.style.cursor = "pointer";
+                        }
+                        return;
+                    }
                 }
             }
 
-            if (!confirm("CONFIRM: Send data to cloud and ERASE everything for tomorrow?")) return;
+            if (!await customConfirm("CONFIRM: Send data to cloud and ERASE everything for tomorrow?", "FINAL CLOSEOUT", "!")) {
+                isClosingOut = false;
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "FINALIZE & WIPE DATA";
+                    btn.style.opacity = "1";
+                    btn.style.cursor = "pointer";
+                }
+                return;
+            }
+
+            isClosingOut = true; // Lock the procedure
 
             // --- STEP 1: FORCE NUMERIC CAPTURE ---
             const lottoVal = Number(document.getElementById('inpLotto').value) || 0;
@@ -1419,7 +1485,7 @@
         }
 
         function startClock() { setInterval(() => { document.getElementById('mainClock').innerText = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }, 1000); }
-        function togglePizzaTimer() { const container = document.getElementById('pizzaTimer'); if (pizzaRunning) { if (pizzaSecondsLeft <= 0) { pizzaSecondsLeft = PIZZA_TIME_SECONDS; clearInterval(pizzaInterval); pizzaRunning = false; container.classList.remove('active'); updatePizzaDisplay(); return; } if (confirm("Stop Pizza Timer?")) { pizzaSecondsLeft = PIZZA_TIME_SECONDS; clearInterval(pizzaInterval); pizzaRunning = false; container.classList.remove('active'); updatePizzaDisplay(); } } else { pizzaRunning = true; pizzaSecondsLeft = PIZZA_TIME_SECONDS; container.classList.add('active'); updatePizzaDisplay(); pizzaInterval = setInterval(() => { pizzaSecondsLeft--; updatePizzaDisplay(); }, 1000); } }
+        async function togglePizzaTimer() { const container = document.getElementById('pizzaTimer'); if (pizzaRunning) { if (pizzaSecondsLeft <= 0) { pizzaSecondsLeft = PIZZA_TIME_SECONDS; clearInterval(pizzaInterval); pizzaRunning = false; container.classList.remove('active'); updatePizzaDisplay(); return; } if (await customConfirm("Stop Pizza Timer?", "PIZZA TIMER", "!!!")) { pizzaSecondsLeft = PIZZA_TIME_SECONDS; clearInterval(pizzaInterval); pizzaRunning = false; container.classList.remove('active'); updatePizzaDisplay(); } } else { pizzaRunning = true; pizzaSecondsLeft = PIZZA_TIME_SECONDS; container.classList.add('active'); updatePizzaDisplay(); pizzaInterval = setInterval(() => { pizzaSecondsLeft--; updatePizzaDisplay(); }, 1000); } }
         function updatePizzaDisplay() { const container = document.getElementById('pizzaTimer'); const display = document.getElementById('pizzaDisplay'); if (pizzaSecondsLeft <= 0) { container.classList.add('pizza-alarm'); display.innerText = "00:00"; } else { container.classList.remove('pizza-alarm'); const m = Math.floor(pizzaSecondsLeft / 60).toString().padStart(2, '0'); const s = (pizzaSecondsLeft % 60).toString().padStart(2, '0'); display.innerText = `${m}:${s}`; } }
 
         function loadLeaguesHybrid() { const cached = localStorage.getItem('vipLeaguesCache'); if (cached) { try { const parsedLeagues = JSON.parse(cached); if (validateLeaguesData(parsedLeagues)) { LEAGUES = parsedLeagues; document.getElementById('leagueLoadingStatus').innerText = "Loaded from Cache (Offline Ready)"; document.getElementById('leagueLoadingStatus').style.color = "var(--vegas-gold)"; } } catch (e) { console.error('Error loading cached leagues:', e); } } if (cloudUrl) fetchLeaguesFromCloud(); }
@@ -1543,7 +1609,7 @@
         window.editEvent = function (eventId) {
             const eventToEdit = resDataCache.find(e => e.id === eventId);
             if (!eventToEdit) {
-                alert("Event not found in cache!");
+                showToast("Event not found in cache!", "error");
                 return;
             }
 
@@ -1825,7 +1891,7 @@
                     console.error("Save data corrupted", e);
                     // Try cloud recovery as fallback
                     if (cloudUrl) {
-                        alert("Local data corrupted! Attempting cloud recovery...");
+                        showToast("Local data corrupted! Attempting cloud recovery...", "error");
                         await recoverFromCloud(true);
                     }
                 }
@@ -1889,7 +1955,7 @@
         // --- NEW: Recover complete state from cloud ---
         async function recoverFromCloud(autoAttempt = false) {
             if (!cloudUrl) {
-                if (!autoAttempt) alert("No cloud URL configured! Please set it in Staff Login panel.");
+                if (!autoAttempt) showToast("No cloud URL configured! Please set it in Staff Login panel.", "error");
                 return false;
             }
 
@@ -1992,13 +2058,13 @@
                 }
 
                 if (!autoAttempt) {
-                    alert(`✅ RECOVERY SUCCESSFUL!\n\nRestored ${activeTables} active table(s) from cloud.\n\n⚠️ Staff Login Required\nPlease log in to continue working.`);
+                    showToast(`✅ RECOVERY SUCCESSFUL!\n\nRestored ${activeTables} active table(s) from cloud.\n\n⚠️ Staff Login Required\nPlease log in to continue working.`, "success");
                     location.reload(); // Refresh to show restored data
                 } else {
                     console.log(`Auto-recovered ${activeTables} active tables from cloud. Staff login required.`);
                     // Show alert if tables were recovered
                     if (activeTables > 0) {
-                        alert(`✅ DATA RECOVERED!\n\n${activeTables} active table(s) restored from cloud backup.\n\nPlease log in to continue.`);
+                        showToast(`✅ DATA RECOVERED!\n\n${activeTables} active table(s) restored from cloud backup.\n\nPlease log in to continue.`, "success");
                     }
                 }
 
@@ -2007,7 +2073,7 @@
             } catch (e) {
                 console.error("Cloud recovery failed:", e);
                 if (!autoAttempt) {
-                    alert("❌ Cloud Recovery Failed\n\n" + e.message + "\n\nCheck your cloud URL and try again.");
+                    showToast("❌ Cloud Recovery Failed\n\n" + e.message + "\n\nCheck your cloud URL and try again.", "error");
                 }
                 return false;
             }
@@ -2044,7 +2110,7 @@
                 if (tableData[i] && tableData[i].players.length > 0) activeTables++;
             }
 
-            alert(`✅ Backup downloaded!\n\n${activeTables} active table(s) saved to file.`);
+            showToast(`✅ Backup downloaded!\n\n${activeTables} active table(s) saved to file.`, "success");
         }
 
         // --- NEW: Upload/restore backup file ---
@@ -2052,12 +2118,12 @@
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = '.json';
-            input.onchange = (e) => {
+            input.onchange = async (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
                 const reader = new FileReader();
-                reader.onload = (event) => {
+                reader.onload = async (event) => {
                     try {
                         const backup = JSON.parse(event.target.result);
 
@@ -2074,13 +2140,13 @@
 
                         const confirmMsg = `Restore from backup file?\n\nBackup Date: ${new Date(backup.backupDate).toLocaleString()}\nActive Tables: ${activeTables}\n\n⚠️ This will replace current data!`;
 
-                        if (confirm(confirmMsg)) {
+                        if (await customConfirm(confirmMsg, "RESTORE BACKUP", "!!!")) {
                             localStorage.setItem('vipPoolState', JSON.stringify(backup));
-                            alert('✅ Backup restored! Page will reload.');
+                            showToast('✅ Backup restored! Page will reload.', 'success');
                             location.reload();
                         }
                     } catch (err) {
-                        alert('❌ Invalid backup file!\n\n' + err.message);
+                        showToast('❌ Invalid backup file!\n\n' + err.message, 'error');
                         console.error(err);
                     }
                 };
@@ -2150,18 +2216,18 @@
         let urlUnlockTimeout = null;
 
         // --- NEW: Password-protected recovery functions ---
-        function adminRecoverFromCloud() {
-            const password = prompt("🔒 ADMIN PASSWORD REQUIRED\n\nRecovering from cloud will OVERWRITE current data.\nThis should only be used if local data is lost or corrupted.\n\nEnter admin password to continue:");
+        async function adminRecoverFromCloud() {
+            const password = prompt("ADMIN PASSWORD REQUIRED\n\nRecovering from cloud will OVERWRITE current data.\nThis should only be used if local data is lost or corrupted.\n\nEnter admin password to continue:");
 
             if (password === null) return; // User clicked cancel
 
             if (password === ADMIN_PASSWORD) {
                 // Extra confirmation
-                if (confirm("⚠️ FINAL CONFIRMATION ⚠️\n\nThis will replace ALL current data with what's in the cloud.\n\nAre you ABSOLUTELY SURE you want to do this?")) {
+                if (await customConfirm("FINAL CONFIRMATION\n\nThis will replace ALL current data with what's in the cloud.\n\nAre you ABSOLUTELY SURE you want to do this?", "CLOUD RECOVERY", "!")) {
                     recoverFromCloud(false);
                 }
             } else {
-                alert('❌ INCORRECT PASSWORD\n\nAccess denied.');
+                showToast('INCORRECT PASSWORD\n\nAccess denied.', 'error');
             }
         }
 
@@ -2173,7 +2239,7 @@
             if (password === ADMIN_PASSWORD) {
                 uploadBackup(); // This already has its own confirmation dialog
             } else {
-                alert('❌ INCORRECT PASSWORD\n\nAccess denied.');
+                showToast('❌ INCORRECT PASSWORD\n\nAccess denied.', 'error');
             }
         }
 
@@ -2205,11 +2271,11 @@
                 clearTimeout(urlUnlockTimeout);
                 urlUnlockTimeout = setTimeout(() => {
                     lockCloudUrl();
-                    alert('⏱️ URL field auto-locked after inactivity');
+                    showToast('⏱️ URL field auto-locked after inactivity', 'warn');
                 }, 60000);
 
             } else {
-                alert('❌ INCORRECT PASSWORD\n\nAccess denied.');
+                showToast('❌ INCORRECT PASSWORD\n\nAccess denied.', 'error');
             }
         }
 
@@ -2232,17 +2298,17 @@
             clearTimeout(urlUnlockTimeout);
         }
 
-        function setCloudUrl() {
+        async function setCloudUrl() {
             const input = document.getElementById('cloudUrlInput');
             const url = input.value.trim();
 
             if (!url) {
-                alert('Please enter a URL');
+                showToast('Please enter a URL', 'error');
                 return;
             }
 
             if (!url.includes('script.google.com')) {
-                if (!confirm('This doesn\'t look like a Google Apps Script URL.\n\nAre you sure this is correct?')) {
+                if (!await customConfirm('This doesn\'t look like a Google Apps Script URL.\n\nAre you sure this is correct?', "URL WARNING", "!")) {
                     return;
                 }
             }
@@ -2253,7 +2319,7 @@
             // Lock the field again
             lockCloudUrl();
 
-            alert('✅ Cloud URL saved and locked!\n\nTesting connection...');
+            showToast('✅ Cloud URL saved and locked!\n\nTesting connection...', 'success');
 
             // Test the connection
             syncToCloud('TEST');
@@ -2262,9 +2328,9 @@
             setTimeout(() => {
                 const dot = document.getElementById('syncDot');
                 if (dot && dot.classList.contains('sync-active')) {
-                    alert('✅ Connection successful!');
+                    showToast('✅ Connection successful!', 'success');
                 } else {
-                    alert('⚠️ Connection test failed\n\nCheck the URL and try again.');
+                    showToast('⚠️ Connection test failed\n\nCheck the URL and try again.', 'error');
                 }
             }, 2000);
         }
@@ -2443,32 +2509,17 @@
             const existing = document.getElementById('leagueToast');
             if (existing) existing.remove();
 
-            const colors = {
-                success: { bg: '#000', border: '#00e676', text: '#00e676' },
-                error: { bg: '#000', border: '#ff2a6d', text: '#ff2a6d' },
-                warn: { bg: '#000', border: '#ffc800', text: '#ffc800' }
-            };
-            const c = colors[type] || colors.success;
-
             const toast = document.createElement('div');
             toast.id = 'leagueToast';
-            toast.style.cssText = `
-                position: fixed; top: 18px; left: 50%; transform: translateX(-50%);
-                background: ${c.bg}; border: 1px solid ${c.border}; color: ${c.text};
-                padding: 12px 24px; border-radius: 8px; font-weight: bold;
-                font-size: 0.9rem; letter-spacing: 0.5px; z-index: 99999;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-                backdrop-filter: blur(6px);
-                transition: opacity 0.5s ease;
-                white-space: nowrap; max-width: 90vw; text-align: center;
-            `;
+            toast.className = `toast-${type}`; // Uses classes from poolmgr.css
             toast.innerText = msg;
             document.body.appendChild(toast);
 
-            // Auto-dismiss after 3s
-            setTimeout(() => { toast.style.opacity = '0'; }, 3000);
-            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 3600);
+            // Auto-dismiss after 3.5s
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateX(-50%) translateY(-10px)'; }, 3500);
+            setTimeout(() => { if (toast.parentNode) toast.remove(); }, 4100);
         }
+
 
         function renderScheduledMatches() {
             const container = document.getElementById('scheduledMatchesList');
@@ -2556,8 +2607,8 @@
             const newFee1 = parseFloat(document.getElementById('editMatchFee1').value);
             const newFee2 = parseFloat(document.getElementById('editMatchFee2').value);
 
-            if (isNaN(newFee1) || newFee1 < 0) return alert('Please enter a valid fee for Team 1.');
-            if (isNaN(newFee2) || newFee2 < 0) return alert('Please enter a valid fee for Team 2.');
+            if (isNaN(newFee1) || newFee1 < 0) return showToast('Please enter a valid fee for Team 1.', 'error');
+            if (isNaN(newFee2) || newFee2 < 0) return showToast('Please enter a valid fee for Team 2.', 'error');
 
             // Convert time to label
             let timeLabel = match.timeLabel;
@@ -2587,21 +2638,19 @@
             closeEditMatchModal();
         }
 
-        function deleteSchedule(id) {
-            if (!confirm("Remove this scheduled match?")) return;
-            const match = scheduledMatches.find(m => m.id === id);
-            if (match) {
-                scheduledMatches = scheduledMatches.filter(m => m.id !== id);
-                updateTableCard(match.tableId); // Remove badge
-                saveData();
-                renderScheduledMatches();
-            }
+        async function deleteSchedule(id) {
+            if (!await customConfirm("Remove this scheduled match?", "DELETE SCHEDULE", "!!!")) return;
+            scheduledMatches = scheduledMatches.filter(m => m.id !== id);
+            saveData();
+            renderScheduledMatches();
+            // Need to update the card too if it was showing this schedule
+            for (let i = 1; i <= TOTAL_TABLES; i++) updateTableCard(i);
         }
 
-        function activateMatch(id) {
-            const match = scheduledMatches.find(m => m.id === id);
-            if (!match) return;
-
+        async function activateMatch(id) {
+            const matchIndex = scheduledMatches.findIndex(m => m.id === id);
+            if (matchIndex === -1) return;
+            const match = scheduledMatches[matchIndex];
             const tId = match.tableId;
             const players = tableData[tId].players;
 
@@ -2609,7 +2658,7 @@
             if (players.length > 0) {
                 // Table is busy!
                 const busyName = players[0].name;
-                const confirmMove = confirm(`⚠️ TABLE ${tId} BUSY ⚠️\n\nOccupied by: ${busyName}\n\nDo you want to move ${busyName} to the FLOAT TABLE and start the league match?`);
+                const confirmMove = await customConfirm(`TABLE ${tId} BUSY\n\nOccupied by: ${busyName}\n\nDo you want to move ${busyName} to the FLOAT TABLE and start the league match?`, "TABLE BUSY", "!");
 
                 if (!confirmMove) return; // Abort
 
@@ -2622,7 +2671,7 @@
 
             // 2. ASSIGN LEAGUE PLAYERS — each team uses their own fee and pre-paid status
             const t1Fee = (match.fee1 !== undefined) ? match.fee1 : match.fee;
-            const t2Fee = (match.fee2 !== undefined) ? match.fee2 : match.fee;
+            const t2Fee = (match.fee2 !== undefined) ? match.team2 : match.fee;
             tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team1, startTime: new Date(), rateType: 'league', leagueFee: t1Fee, isPaid: match.paid1 || false });
             tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team2, startTime: new Date(), rateType: 'league', leagueFee: t2Fee, isPaid: match.paid2 || false });
 
@@ -2754,20 +2803,20 @@
 
         function addAdjustment() {
             const cat = document.getElementById('adjCategory').value;
-            if (!cat) return alert("Please select a category.");
+            if (!cat) return showToast("Please select a category.", "error");
             const amtStr = document.getElementById('adjAmount').value;
-            if (!amtStr) return alert("Enter an amount.");
+            if (!amtStr) return showToast("Enter an amount.", "error");
             const amount = parseFloat(amtStr);
-            if (isNaN(amount)) return alert("Invalid amount.");
+            if (isNaN(amount)) return showToast("Invalid amount.", "error");
 
             let desc = cat;
             if (cat === 'Table/Player Adjustment') {
                 const tableNum = document.getElementById('adjTable').value;
-                if (!tableNum) return alert("Please enter the table number being adjusted.");
+                if (!tableNum) return showToast("Please enter the table number being adjusted.", "error");
                 desc = `Table/Player Adjustment - Table ${tableNum}`;
             } else if (cat === 'Custom') {
                 const customDesc = document.getElementById('adjCustomDesc').value.trim();
-                if (!customDesc) return alert("Please enter a custom description.");
+                if (!customDesc) return showToast("Please enter a custom description.", "error");
                 desc = customDesc;
             }
 
@@ -2785,7 +2834,7 @@
         function addExpense() {
             const desc = document.getElementById('expDesc').value;
             const amtStr = document.getElementById('expAmount').value;
-            if (!desc || !amtStr) return alert("Enter who was paid and how much.");
+            if (!desc || !amtStr) return showToast("Enter who was paid and how much.", "error");
             const amount = parseFloat(amtStr);
             const isOwnerMoney = document.getElementById('expIsOwner') && document.getElementById('expIsOwner').checked;
 
@@ -2831,7 +2880,7 @@
 
             // --- SAFETY CHECK: LEAGUE MATCHES ---
             if (player.rateType === 'league' && targetPlayers.length > 0) {
-                return alert(`⚠️ LEAGUE RESTRICTION ⚠️\n\nYou cannot move a League Match to Table ${targetTableId} because it is currently occupied.\n\nPlease clear Table ${targetTableId} first.`);
+                return showToast(`⚠️ LEAGUE RESTRICTION ⚠️\n\nYou cannot move a League Match to Table ${targetTableId} because it is currently occupied.\n\nPlease clear Table ${targetTableId} first.`, "error");
             }
 
             // --- MOVE LOGIC ---
@@ -2984,17 +3033,17 @@
             document.getElementById('statMyTotal').innerText = `$${(currentTotal - shiftStartRevenue).toFixed(2)}`;
         }
 
-        function addPlayer() { if (currentOpenTableId === null) return; if (tableData[currentOpenTableId].isHold) return alert("Table is on Hold!"); const players = tableData[currentOpenTableId].players; players.push({ id: Date.now(), name: "Player " + (players.length + 1), startTime: new Date(), rateType: 'standard', isPaid: false, stoppedAt: null }); saveData(); renderPanel(); updateTableCard(currentOpenTableId); }
+        function addPlayer() { if (currentOpenTableId === null) return; if (tableData[currentOpenTableId].isHold) return showToast("Table is on Hold!", "warn"); const players = tableData[currentOpenTableId].players; players.push({ id: Date.now(), name: "Player " + (players.length + 1), startTime: new Date(), rateType: 'standard', isPaid: false, stoppedAt: null }); saveData(); renderPanel(); updateTableCard(currentOpenTableId); }
         function resumePlayer(playerId) { const player = findPlayer(playerId); if (player) { player.stoppedAt = null; saveData(); renderPanel(); updateTableCard(currentOpenTableId); updateLiveValues(); } }
-        function removePlayer(playerId) {
+        async function removePlayer(playerId) {
             if (currentOpenTableId === null) return;
             const player = findPlayer(playerId);
 
-            if (player.rateType === 'event_satellite') return alert("Manage this on the Anchor Table.");
+            if (player.rateType === 'event_satellite') return showToast("Manage this on the Anchor Table.", "warn");
 
             if (player.rateType === 'event_anchor') {
                 if (player.linkedTables && player.linkedTables.length > 0) {
-                    if (!confirm(`⚠️ CLOSING EVENT ⚠️\n\nThis will clear the Linked Tables: ${player.linkedTables.join(', ')}.\n\nAre you sure everyone is finished?`)) {
+                    if (!await customConfirm(`CLOSING EVENT\n\nThis will clear the Linked Tables: ${player.linkedTables.join(', ')}.\n\nAre you sure everyone is finished?`, "CLEAR EVENT", "!")) {
                         return;
                     }
                     player.linkedTables.forEach(satId => {
@@ -3443,17 +3492,17 @@
             const player = tableData[currentOpenTableId].players.find(p => p.id === playerId);
 
             if (!player) {
-                alert("Player not found!");
+                showToast("Player not found!", "error");
                 return;
             }
 
             if (!player.isPaid) {
-                alert("⚠️ Table must be marked as PAID first!\n\nPlease check 'MARK PAID' before clearing dues.");
+                showToast("⚠️ Table must be marked as PAID first!\n\nPlease check 'MARK PAID' before clearing dues.", "error");
                 return;
             }
 
             if (!player.unpaidDues || player.unpaidDues <= 0) {
-                alert("No unpaid dues to clear.");
+                showToast("No unpaid dues to clear.", "warn");
                 return;
             }
 
@@ -3463,12 +3512,12 @@
                 `Note: ${player.unpaidNote || 'None'}\n\n` +
                 `This team will no longer show a warning.`;
 
-            if (!confirm(confirmMsg)) {
+            if (!await customConfirm(confirmMsg, "CLEAR TEAM DUES", "$")) {
                 return;
             }
 
             if (!cloudUrl) {
-                alert("No cloud URL configured! Cannot clear dues.");
+                showToast("No cloud URL configured! Cannot clear dues.", "error");
                 return;
             }
 
@@ -3496,18 +3545,18 @@
                     // Refresh panel to remove warning
                     renderPanel();
 
-                    alert(`✅ Dues Cleared Successfully!\n\n${player.name} will no longer show a warning when scheduled.`);
+                    showToast(`✅ Dues Cleared Successfully!\n\n${player.name} will no longer show a warning when scheduled.`, "success");
 
                     // Reload leagues from cloud to get fresh data
                     if (cloudUrl) {
                         fetchLeaguesFromCloud();
                     }
                 } else {
-                    alert('❌ Error clearing dues: ' + (result.message || 'Unknown error'));
+                    showToast('❌ Error clearing dues: ' + (result.message || 'Unknown error'), "error");
                 }
             } catch (err) {
                 console.error('Error clearing dues:', err);
-                alert('❌ Error clearing dues: ' + err.message);
+                showToast('❌ Error clearing dues: ' + err.message, "error");
             }
         }
 
@@ -3775,20 +3824,20 @@
             });
         }
 
-        function dismissRes(resId, name) {
-            if (!confirm(`Hide reservation for ${name}?`)) return;
+        async function dismissRes(resId, name) {
+            if (!await customConfirm(`Hide reservation for ${name}?`, "HIDE RESERVATION", "?")) return;
             dismissedReservations.push(resId);
             localStorage.setItem('vipDismissedRes', JSON.stringify(dismissedReservations));
             initReservationSync();
         }
 
-        function markNoShow(resId, name) {
-            if (!confirm(`Mark ${name} as NO-SHOW?`)) return;
+        async function markNoShow(resId, name) {
+            if (!await customConfirm(`Mark ${name} as NO-SHOW?`, "MARK NO-SHOW", "!")) return;
             if (window.markReservationStatus) window.markReservationStatus(resId, 'NO-SHOW');
         }
 
-        function markCancelled(resId, name) {
-            if (!confirm(`Mark ${name} as CANCELLED?`)) return;
+        async function markCancelled(resId, name) {
+            if (!await customConfirm(`Mark ${name} as CANCELLED?`, "MARK CANCELLED", "X")) return;
             if (window.markReservationStatus) window.markReservationStatus(resId, 'CANCELLED');
         }
 
@@ -3918,7 +3967,7 @@
                 closeResPicker();
                 document.getElementById('resChoiceOverlay').classList.remove('active');
                 document.getElementById('holo-panel').classList.remove('active');
-                alert(`Linked ${name} to Table ${tableNum}.`);
+                showToast(`Linked ${name} to Table ${tableNum}.`, "success");
             }
         }
 
@@ -3981,7 +4030,7 @@
             }
         });
         // --- 1. Helper Functions (Declarations) ---
-        function promoteToAnchor(playerId) {
+        async function promoteToAnchor(playerId) {
             const tableIdOfPlayer = Object.keys(tableData).find(tid => tableData[tid].players.some(p => p.id === playerId));
             if (!tableIdOfPlayer) return;
 
@@ -3990,9 +4039,9 @@
             const oldAnchorId = player.anchorId;
             const newAnchorId = currentTableId;
 
-            if (!oldAnchorId) return alert("This table is not linked to an anchor.");
+            if (!oldAnchorId) return showToast("This table is not linked to an anchor.", "error");
 
-            if (!confirm(`Promote Table ${newAnchorId} to the Event Anchor?\nThis table will now handle the total bill and all linked tables.`)) return;
+            if (!await customConfirm(`Promote Table ${newAnchorId} to the Event Anchor?\nThis table will now handle the total bill and all linked tables.`, "PROMOTE ANCHOR", "!")) return;
 
             const oldAnchorP = tableData[oldAnchorId].players[0];
             const eventPrice = oldAnchorP.leagueFee;
@@ -4025,7 +4074,7 @@
             newAnchorP.linkedTables.forEach(tId => updateTableCard(tId));
 
             if (currentOpenTableId !== null) renderPanel();
-            alert(`Table ${newAnchorId} is now the Anchor.`);
+            showToast(`Table ${newAnchorId} is now the Anchor.`, "success");
         }
 
         let currentResCandidate = null; // Stores the name while picking a table
@@ -4363,6 +4412,23 @@
             </p>
             <button class="btn btn-ctrl" onclick="closeManualResNotice()"
                 style="border-color: var(--neon-blue); color: var(--neon-blue); width: 100%;">UNDERSTOOD</button>
+        </div>
+    </div>
+    <!-- GENERIC CONFIRM MODAL -->
+    <div id="confirmOverlay" class="move-overlay" style="z-index: 20000;">
+        <div class="confirm-modal-content"
+            style="background: #1a1d29; border: 2px solid var(--neon-blue); padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; text-align: center; box-shadow: 0 0 40px rgba(0,0,0,0.8);">
+            <div id="confirmIcon" style="font-size: 3rem; margin-bottom: 15px;">⚠️</div>
+            <h2 id="confirmTitle"
+                style="color: var(--vegas-gold); margin-top: 0; text-transform: uppercase; letter-spacing: 2px;">CONFIRM</h2>
+            <p id="confirmMessage"
+                style="color: white; font-size: 1.1rem; line-height: 1.5; margin-bottom: 30px; white-space: pre-wrap;"></p>
+            <div style="display: flex; gap: 15px;">
+                <button id="confirmBtnCancel" class="btn btn-ctrl"
+                    style="flex: 1; padding: 15px; font-weight: bold; border-color:#444;">CANCEL</button>
+                <button id="confirmBtnOk" class="btn btn-save"
+                    style="flex: 1; padding: 15px; font-weight: bold; background: var(--neon-blue); color: black; border: none;">OK</button>
+            </div>
         </div>
     </div>
 </body>

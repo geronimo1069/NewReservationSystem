@@ -186,10 +186,11 @@ function doPost(e) {
       return createCorsResponse({ status: "error", message: "Team not found: " + data.leagueName + " / " + data.teamName });
     }
 
-    if (data.type === 'CLOSE_DAY') {
+        if (data.type === 'CLOSE_DAY') {
       var sheet = ss.getSheetByName("DailyLogs");
       if (!sheet) sheet = ss.insertSheet("DailyLogs");
       if (sheet.getLastRow() === 0) {
+        // Updated header to include Column N: "Time OUTs"
         sheet.appendRow(["Date", "ClosedBy", "GrossSales", "Cash", "Credit", "PoolRevenue", "BarRevenue", "Lotto", "CashDrop", "DayPlayers", "NightPlayers", "StaffList", "Notes", "Time OUTs"]);
       }
       var now = new Date();
@@ -207,6 +208,7 @@ function doPost(e) {
       if (data.expenses) { data.expenses.forEach(function(e) { expTotal += (Number(e.amount) || 0); }); }
       var calculatedDrop = cash + lotto - expTotal;
 
+      // Extract and format the Time OUTs from the staffHistory array
       var staffTimesStr = (data.staffHistory || []).map(function(s) {
         return s.name + ": " + (s.timeOut || "??");
       }).join(" / ");
@@ -216,8 +218,9 @@ function doPost(e) {
         lotto, calculatedDrop, sts.day || 0, sts.night || 0,
         (data.staffHistory || []).map(function(s) { return s.name; }).join(", "),
         "v8.8.5 - Staff Out",
-        staffTimesStr
+        staffTimesStr // New Column N
       ];
+      
       sheet.insertRowBefore(2);
       sheet.getRange(2, 1, 1, rowData.length).setValues([rowData]);
       sheet.getRange(2, 3, 1, 7).setNumberFormat('$0.00');
