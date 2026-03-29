@@ -55,9 +55,16 @@ function doGet(e) {
         var leagueName = row[0] ? row[0].toString().trim() : '';
         var teamName = row[1] ? row[1].toString().trim() : '';
         var fee = parseFloat(row[2]) || 0;
-        var unpaidDues = parseFloat(row[9]) || 0;
-        var unpaidNote = row[10] ? row[10].toString().trim() : '';
+        var onTime = row[4] ? row[4].toString().trim() : '';
+        var earlyTime1 = row[5] ? row[5].toString().trim() : '';
+        var earlyFee1 = row[6] ? row[6].toString().trim() : '';
+        var earlyTime2 = row[7] ? row[7].toString().trim() : '';
+        var earlyFee2 = row[8] ? row[8].toString().trim() : '';
+        var earlyTime3 = row[9] ? row[9].toString().trim() : '';
+        var earlyFee3 = row[10] ? row[10].toString().trim() : '';
         var dayOfWeek = row[11] ? row[11].toString().trim() : '';
+        var unpaidDues = parseFloat(row[12]) || 0;
+        var unpaidNote = row[13] ? row[13].toString().trim() : '';
         if (!leagueName || !teamName) continue;
         var dayKey = getDayKey(dayOfWeek);
         var leagueKey = null;
@@ -73,7 +80,19 @@ function doGet(e) {
           leagueKey = dayKey + dayCounters[dayKey];
         }
         if (!leaguesData[leagueKey]) {
-          leaguesData[leagueKey] = { name: leagueName, day: dayOfWeek, teams: [], fee: fee };
+          leaguesData[leagueKey] = { 
+            name: leagueName, 
+            day: dayOfWeek, 
+            teams: [], 
+            fee: fee,
+            onTime: onTime,
+            earlyTime1: earlyTime1,
+            earlyFee1: earlyFee1,
+            earlyTime2: earlyTime2,
+            earlyFee2: earlyFee2,
+            earlyTime3: earlyTime3,
+            earlyFee3: earlyFee3
+          };
         }
         leaguesData[leagueKey].teams.push({ name: teamName, unpaidDues: unpaidDues, unpaidNote: unpaidNote });
       }
@@ -178,8 +197,8 @@ function doPost(e) {
       var values = dataRange.getValues();
       for (var i = 1; i < values.length; i++) {
         if (values[i][0] === data.leagueName && values[i][1] === data.teamName) {
-          sheet.getRange(i + 1, 10).setValue('');
-          sheet.getRange(i + 1, 11).setValue('');
+          sheet.getRange(i + 1, 13).setValue('');
+          sheet.getRange(i + 1, 14).setValue('');
           return createCorsResponse({ status: "success", message: "Dues cleared for " + data.teamName });
         }
       }

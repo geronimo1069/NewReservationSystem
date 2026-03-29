@@ -1377,6 +1377,65 @@ body::after {
     letter-spacing: 0.5px;
 }
 
+/* ── BOOKING OPTIONS GRID ── */
+.booking-options-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 10px;
+}
+
+.booking-option-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+
+.booking-option-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(197, 179, 88, 0.2);
+}
+
+.booking-option-label {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    color: var(--gold);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.booking-option-desc {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+    margin-bottom: 14px;
+}
+
+.booking-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 3px;
+    opacity: 0.5;
+}
+
+.booking-divider::before,
+.booking-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+}
+
+
 /* ════════════════════════════════════════
    RESERVATION MODAL SYSTEM
    ════════════════════════════════════════ */

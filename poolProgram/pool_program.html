@@ -319,7 +319,7 @@
         };
 
         window.deleteEventFromFirestore = async function (eventId) {
-            if (!confirm("Are you sure you want to delete/cancel this event?")) return false;
+            if (!await customConfirm("Are you sure you want to delete/cancel this event?", "DELETE EVENT", "!!!")) return false;
             try {
                 await deleteDoc(doc(db, "events", eventId));
                 showToast("✓ Event Cancelled/Removed.", "success");
@@ -442,66 +442,58 @@
         </div>
     </div>
     <div class="side-panel" id="leaguePanel">
-        <div class="panel-header">
+        <div class="panel-header" style="border-bottom: 2px solid var(--neon-green);">
             <h2 class="mb-0 text-neon-green">LEAGUE MANAGER</h2>
             <button class="btn btn-close" onclick="closeLeaguePanel()">X</button>
         </div>
 
-        <div class="mb-20 d-flex justify-between align-center bg-dark-well">
-            <div>
-                <div class="text-white text-bold">SCHEDULE MODE</div>
-                <div class="text-muted text-xs">Create matches for later</div>
-            </div>
-            <label class="switch">
-                <input type="checkbox" id="scheduleModeToggle" onchange="renderLeaguePanelState()"
-                    aria-label="Schedule Mode Toggle">
-                <span class="slider"></span>
-            </label>
-        </div>
-
-        <div id="leagueMainControls">
-            <div class="mb-10 bg-dark-well">
-                <label class="text-muted text-sm">Select League Night</label>
-                <select id="leagueSelector" class="league-select" onchange="updateLeagueDropdowns()"
-                    title="Select League Night"></select>
-                <div class="text-muted mt-5 text-xs" id="leagueLoadingStatus">Mode: Local Safe
+        <div class="league-dashboard-wrapper">
+            <!-- LEFT: SCHEDULER -->
+            <div class="league-scheduler">
+                <div class="mb-20 d-flex justify-between align-center bg-dark-well p-10 borderRadius-8">
+                    <div>
+                        <div class="text-white text-bold text-xs">SCHEDULE MODE</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="scheduleModeToggle" onchange="renderLeaguePanelState()" checked aria-label="Schedule Mode Toggle">
+                        <span class="slider"></span>
+                    </label>
                 </div>
-            </div>
-            <div class="league-control-box">
-                <div class="league-section">
-                    <h3 id="assignTitle">CREATE MATCH</h3>
 
-                    <div id="scheduleTimeDiv" class="hid-none mb-10 bg-dark-well border-holo-gold schedule-time-box">
-                        <label class="text-bold text-xs vegas-gold" for="scheduleTimeInput">SCHEDULED
-                            TIME</label>
-                        <input type="time" id="scheduleTimeInput" class="league-select mt-5 border-holo-gold vegas-gold"
-                            value="19:30" title="Scheduled Time" placeholder="HH:MM">
+                <div class="mb-15 bg-dark-well p-10 borderRadius-8">
+                    <label class="text-muted text-xs">Select League Night</label>
+                    <select id="leagueSelector" class="league-select" onchange="updateLeagueDropdowns()" title="Select League Night"></select>
+                    <div class="text-muted mt-5 text-xxs" id="leagueLoadingStatus">Synced with Cloud</div>
+                </div>
+
+                <div class="league-section">
+                    <h3 id="assignTitle" class="text-sm text-bold mb-10">SCHEDULE MATCH</h3>
+                    
+                    <div id="scheduleTimeDiv" class="mb-10 bg-dark-well border-holo-gold p-10 borderRadius-8">
+                        <label class="text-bold text-xxs vegas-gold" for="scheduleTimeInput">MATCH START TIME</label>
+                        <input type="time" id="scheduleTimeInput" class="league-select mt-5 border-holo-gold vegas-gold" value="19:30" title="Scheduled Time">
                     </div>
 
                     <div class="text-muted text-xs mb-5">Team 1</div>
                     <select id="matchTeam1" class="league-select" title="Select Team 1"></select>
+                    
                     <div class="text-muted text-xs mb-5">Team 2</div>
                     <select id="matchTeam2" class="league-select" title="Select Team 2"></select>
-                    <div class="u-9b00a90b">Assign Table</div>
+                    
+                    <div class="text-bold text-xs vegas-gold mt-10 mb-5">Assign Table</div>
                     <select id="matchTable" class="league-select" title="Assign Table"></select>
-                    <button class="league-btn-assign" id="btnAssignMatch" onclick="assignMatch()">ASSIGN MATCH</button>
-                </div>
-
-                <div class="league-section">
-                    <h3 class="text-neon-orange">CREATE PRACTICE</h3>
-                    <div class="text-muted text-xs mb-5">Select Team</div>
-                    <select id="pracTeam" class="league-select" title="Select Team"></select>
-                    <div class="u-9b00a90b">Assign Table</div>
-                    <select id="pracTable" class="league-select" title="Assign Table"></select>
-                    <button class="league-btn-assign" onclick="assignPractice()">ASSIGN PRACTICE</button>
+                    
+                    <button class="league-btn-assign width-full mt-15" id="btnAssignMatch" onclick="assignMatch()">ADD TO DASHBOARD</button>
                 </div>
             </div>
-        </div>
 
-        <h3 class="mt-30 border-b text-holo-gold">UPCOMING
-            SCHEDULE</h3>
-        <div id="scheduledMatchesList" class="u-b0626419">
-            <div class="italic text-center text-muted p-20">No matches scheduled.</div>
+            <!-- RIGHT: DASHBOARD -->
+            <div class="league-dashboard-main">
+                <h3 class="text-holo-gold border-b pb-5 mb-15">TODAY'S MATCHES</h3>
+                <div id="scheduledMatchesList" class="dashboard-list">
+                    <div class="italic text-center text-muted p-20">No matches scheduled for today.</div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -761,6 +753,7 @@
             </div>
         </div>
     </div>
+    
     <div class="side-panel" id="adjustmentPanel">
         <div class="panel-header">
             <h2 class="mb-0 u-c84aadb2">ADJUST / DEDUCT</h2><button class="btn btn-close"
@@ -1345,7 +1338,7 @@
             if (historyQueue.length > 0) {
                 await processQueue();
                 if (historyQueue.length > 0) {
-                    const confirmForce = confirm(`⚠️ WARNING: INTERNET ISSUE ⚠️\n\nYou have ${historyQueue.length} transactions pending.`);
+                    const confirmForce = await customConfirm(`⚠️ WARNING: INTERNET ISSUE ⚠️\n\nYou have ${historyQueue.length} transactions pending.\n\nContinue anyway?`, "PENDING TRANSACTIONS", "!");
                     if (!confirmForce) {
                         isClosingOut = false;
                         if (btn) {
@@ -1489,17 +1482,38 @@
         function updatePizzaDisplay() { const container = document.getElementById('pizzaTimer'); const display = document.getElementById('pizzaDisplay'); if (pizzaSecondsLeft <= 0) { container.classList.add('pizza-alarm'); display.innerText = "00:00"; } else { container.classList.remove('pizza-alarm'); const m = Math.floor(pizzaSecondsLeft / 60).toString().padStart(2, '0'); const s = (pizzaSecondsLeft % 60).toString().padStart(2, '0'); display.innerText = `${m}:${s}`; } }
 
         function loadLeaguesHybrid() { const cached = localStorage.getItem('vipLeaguesCache'); if (cached) { try { const parsedLeagues = JSON.parse(cached); if (validateLeaguesData(parsedLeagues)) { LEAGUES = parsedLeagues; document.getElementById('leagueLoadingStatus').innerText = "Loaded from Cache (Offline Ready)"; document.getElementById('leagueLoadingStatus').style.color = "var(--vegas-gold)"; } } catch (e) { console.error('Error loading cached leagues:', e); } } if (cloudUrl) fetchLeaguesFromCloud(); }
-        async function fetchLeaguesFromCloud() { try { const response = await fetch(cloudUrl + "?action=getLeagues"); const data = await response.json(); if (data && Object.keys(data).length > 0 && validateLeaguesData(data)) { LEAGUES = data; localStorage.setItem('vipLeaguesCache', JSON.stringify(LEAGUES)); document.getElementById('leagueLoadingStatus').innerText = "Synced with Cloud"; document.getElementById('leagueLoadingStatus').style.color = "var(--neon-green)"; populateLeagueSelector(); if (document.getElementById('leaguePanel').classList.contains('open')) { autoSetScheduleMode(); } } } catch (e) { console.error('Error fetching leagues from cloud:', e); } }
+        async function fetchLeaguesFromCloud() { 
+            try { 
+                const response = await fetch(cloudUrl + "?action=getLeagues"); 
+                const data = await response.json(); 
+                if (data && Object.keys(data).length > 0 && validateLeaguesData(data)) { 
+                    LEAGUES = data; 
+                    localStorage.setItem('vipLeaguesCache', JSON.stringify(LEAGUES)); 
+                    document.getElementById('leagueLoadingStatus').innerText = "Synced with Cloud"; 
+                    document.getElementById('leagueLoadingStatus').style.color = "var(--neon-green)"; 
+                    populateLeagueSelector(); 
+                    // Trigger dropdown update for current selection
+                    updateLeagueDropdowns();
+                    if (document.getElementById('leaguePanel').classList.contains('open')) { 
+                        autoSetScheduleMode(); 
+                    } 
+                } 
+            } catch (e) { console.error('Error fetching leagues from cloud:', e); } 
+        }
 
         // Validate league data structure
         function validateLeaguesData(data) {
             if (!data || typeof data !== 'object') return false;
             for (let key in data) {
                 const league = data[key];
-                if (!league.name) {
+                if (!league.name && !league.Name) {
                     console.warn(`League ${key} missing name`);
                     return false;
                 }
+                // Standardize keys
+                if (league.Name && !league.name) league.name = league.Name;
+                if (!league.teams && league.Teams) league.teams = league.Teams;
+                if (league.day && !league.dayOfWeek) league.dayOfWeek = league.day;
                 if (!Array.isArray(league.teams)) {
                     console.warn(`League ${key} missing teams array, initializing empty array`);
                     league.teams = [];
@@ -1509,7 +1523,13 @@
         }
 
         // --- V7.4 NEW SLIDE-IN PANEL FUNCTIONS ---
-        function openLeaguePanel() { document.getElementById('leaguePanel').classList.add('open'); populateLeagueSelector(); updateLeagueDropdowns(); renderLeaguePanelState(); autoSetScheduleMode(); }
+        function openLeaguePanel() { 
+            document.getElementById('leaguePanel').classList.add('open'); 
+            populateLeagueSelector(); 
+            updateLeagueDropdowns(); 
+            renderLeaguePanelState(); 
+            autoSetScheduleMode(); 
+        }
         function closeLeaguePanel() { document.getElementById('leaguePanel').classList.remove('open'); }
         function openMiscEventPanel(isEdit = false) {
             document.getElementById('miscEventPanel').classList.add('open');
@@ -1639,34 +1659,116 @@
             const sel = document.getElementById('leagueSelector');
             sel.innerHTML = '';
 
-            // Get today's day of the week as a string (e.g., "Monday")
             const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const todayStr = days[new Date().getDay()];
-            let matchKey = null;
+            const todayShort = todayStr.substring(0, 3).toLowerCase();
+
+            const todayLeagues = [];
+            const otherLeagues = [];
 
             for (let key in LEAGUES) {
-                sel.innerHTML += `<option value="${key}">${LEAGUES[key].name}</option>`;
+                const league = LEAGUES[key];
+                const dayOfWeek = (league.dayOfWeek || "").toLowerCase();
+                const leagueName = (league.name || "").toLowerCase();
 
-                // Check if DB dayOfWeek matches today, OR if the league name contains today's day
-                const dayOfWeek = LEAGUES[key].dayOfWeek;
-                if (dayOfWeek && dayOfWeek.toLowerCase() === todayStr.toLowerCase()) {
-                    matchKey = key;
-                } else if (LEAGUES[key].name.toLowerCase().includes(todayStr.toLowerCase())) {
-                    if (!matchKey) matchKey = key;
+                // Robust check: matches full day name OR the 3-letter abbreviation
+                const isDayMatch = (dayOfWeek === todayStr.toLowerCase() || dayOfWeek.startsWith(todayShort));
+                const isNameMatch = (leagueName.includes(todayStr.toLowerCase()) || leagueName.includes(todayShort));
+
+                if (isDayMatch || isNameMatch) {
+                    todayLeagues.push({ key, name: league.name });
+                } else {
+                    otherLeagues.push({ key, name: league.name });
                 }
             }
 
-            // Auto-select today's league if a match was found
-            if (matchKey) {
-                sel.value = matchKey;
+            // Build dropdown: Matches for today first
+            todayLeagues.forEach(l => {
+                sel.innerHTML += `<option value="${l.key}">${l.name}</option>`;
+            });
+            // Then everyone else
+            otherLeagues.forEach(l => {
+                sel.innerHTML += `<option value="${l.key}">${l.name}</option>`;
+            });
+
+            // Default selection to the top item
+            if (sel.options.length > 0) {
+                sel.selectedIndex = 0;
             }
         }
 
-        function populateTableDropdowns() { const matchSel = document.getElementById('matchTable'); const pracSel = document.getElementById('pracTable'); let opts = ''; for (let i = 1; i <= TOTAL_TABLES; i++) { opts += `<option value="${i}">Table ${i}</option>`; } matchSel.innerHTML = opts; pracSel.innerHTML = opts; matchSel.value = "10"; pracSel.value = "10"; }
+        function populateTableDropdowns() {
+            const matchSel = document.getElementById('matchTable');
+            const pracSel = document.getElementById('pracTable');
+            let opts = '';
+            for (let i = 1; i <= TOTAL_TABLES; i++) {
+                let suffix = '';
+                if (tableData[i].players.length > 0) suffix = ' (BUSY)';
+                else if (tableData[i].isHold) suffix = ' (HOLD)';
+                else {
+                    // Check if reserved for an upcoming event
+                    const eventRes = resDataCache.find(r => r.type === 'event' && (r.anchorTable == i || (r.linkedTables && r.linkedTables.includes(i))));
+                    if (eventRes) suffix = ' (EVENT RES)';
+                }
+                opts += `<option value="${i}">Table ${i}${suffix}</option>`;
+            }
+            if (matchSel) {
+                matchSel.innerHTML = opts;
+                matchSel.value = "10";
+            }
+            if (pracSel) { 
+                pracSel.innerHTML = opts;
+                pracSel.value = "10";
+            }
+        }
+        
+        function getDynamicLeagueFee(leagueKey) {
+            const league = LEAGUES[leagueKey];
+            if (!league) return 25.00;
+
+            const baseFee = parseFloat(league.fee || league.Fee || league.tableFee || league.TableFee) || 25.00;
+            
+            // Check if today matches the league day (case-insensitive)
+            const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const todayStr = days[new Date().getDay()].toLowerCase();
+            const leagueDay = (league.dayOfWeek || "").toLowerCase();
+            
+            // If not today, or no onTime/earlyBird config, return base fee
+            if (!leagueDay.includes(todayStr) && !todayStr.includes(leagueDay)) return baseFee;
+            if (!league.onTime) return baseFee;
+
+            const now = new Date();
+            const parseTime = (timeStr) => {
+                if (!timeStr) return null;
+                const [timePart, meridiem] = timeStr.split(' ');
+                const [h, m] = timePart.split(':').map(Number);
+                let hour = h % 12;
+                if (meridiem && meridiem.toUpperCase() === 'PM') hour += 12;
+                const d = new Date(now);
+                d.setHours(hour, m, 0, 0);
+                return d;
+            };
+
+            const earlyTimes = [
+                { time: parseTime(league.earlyTime1), fee: parseFloat(league.earlyFee1) },
+                { time: parseTime(league.earlyTime2), fee: parseFloat(league.earlyFee2) },
+                { time: parseTime(league.earlyTime3), fee: parseFloat(league.earlyFee3) }
+            ].filter(et => et.time && !isNaN(et.fee));
+
+            // Logic: If current time is BEFORE the early bird cut-off, use that fee
+            // Check in reverse order (earlyTime1 is usually the earliest)
+            for (const et of earlyTimes) {
+                if (now < et.time) return et.fee;
+            }
+
+            return baseFee;
+        }
+
         function updateLeagueDropdowns() {
             populateTableDropdowns();
             const leagueKey = document.getElementById('leagueSelector').value;
             if (!leagueKey || !LEAGUES[leagueKey]) return;
+            autoSetScheduleMode();
             const teams = LEAGUES[leagueKey].teams;
 
             // Safety check: ensure teams exists and is an array
@@ -1675,9 +1777,9 @@
                 const t1 = document.getElementById('matchTeam1');
                 const t2 = document.getElementById('matchTeam2');
                 const pt = document.getElementById('pracTeam');
-                t1.innerHTML = '<option value="">No teams available</option>';
-                t2.innerHTML = '<option value="">No teams available</option>';
-                pt.innerHTML = '<option value="">No teams available</option>';
+                if (t1) t1.innerHTML = '<option value="">No teams available</option>';
+                if (t2) t2.innerHTML = '<option value="">No teams available</option>';
+                if (pt) pt.innerHTML = '<option value="">No teams available</option>';
                 return;
             }
 
@@ -1698,9 +1800,9 @@
                 }
             });
 
-            t1.innerHTML = opts;
-            t2.innerHTML = opts;
-            pt.innerHTML = opts;
+            if (t1) t1.innerHTML = opts;
+            if (t2) t2.innerHTML = opts;
+            if (pt) pt.innerHTML = opts;
         }
         function assignPractice() {
             const tName = document.getElementById('pracTeam').value;
@@ -1715,14 +1817,8 @@
             const teams = LEAGUES[leagueKey].teams;
             const teamData = teams.find(t => (typeof t === 'object' ? t.name : t) === tName);
 
-            // Get base fee
-            let baseFee = 25.00;
-            if (LEAGUES[leagueKey]) {
-                const rawFee = LEAGUES[leagueKey].fee || LEAGUES[leagueKey].Fee || LEAGUES[leagueKey].tableFee || LEAGUES[leagueKey].TableFee;
-                if (rawFee !== undefined && rawFee !== null && rawFee !== "") {
-                    baseFee = parseFloat(rawFee);
-                }
-            }
+            // Calculate dynamic fee (early bird etc.)
+            const baseFee = getDynamicLeagueFee(leagueKey);
 
             // Calculate total fee with unpaid dues
             const unpaidDues = (typeof teamData === 'object' && teamData.unpaidDues) ? parseFloat(teamData.unpaidDues) : 0;
@@ -1738,7 +1834,7 @@
                 isPaid: false,
                 unpaidDues: unpaidDues,
                 unpaidNote: note,
-                leagueName: LEAGUES[leagueKey].name
+                leagueName: LEAGUES[leagueKey].name || "League Match"
             });
 
             updateTableCard(tableId);
@@ -1923,6 +2019,7 @@
                     if ((p.rateType === 'league' || p.rateType === 'league_practice') && (p.leagueFee === null || p.leagueFee === undefined)) p.leagueFee = 25.00;
                 });
                 if (typeof tableData[t].isHold === 'undefined') tableData[t].isHold = false;
+                if (typeof tableData[t].hasBarTab === 'undefined') tableData[t].hasBarTab = false;
             }
 
             transactionLog = state.transactionLog || [];
@@ -2392,7 +2489,7 @@
             renderLeaguePanelState();
         }
 
-        function assignMatch() {
+        async function assignMatch() {
             const t1Name = document.getElementById('matchTeam1').value;
             const t2Name = document.getElementById('matchTeam2').value;
             const tableId = document.getElementById('matchTable').value;
@@ -2406,15 +2503,17 @@
 
             if (!t1Name || !t2Name || t1Name === t2Name) return showToast("Select two different teams.", "error");
 
-            let fee = 25.00;
-            if (LEAGUES[leagueKey]) {
-                const rawFee = LEAGUES[leagueKey].fee || LEAGUES[leagueKey].Fee || LEAGUES[leagueKey].tableFee || LEAGUES[leagueKey].TableFee;
-                if (rawFee !== undefined && rawFee !== null && rawFee !== "") { fee = parseFloat(rawFee); }
-            }
+            const fee = getDynamicLeagueFee(leagueKey);
 
             if (isScheduleMode) {
                 // --- SCHEDULE MODE ---
                 if (scheduledMatches.find(m => m.tableId == tableId)) return showToast(`Table ${tableId} already has a pending schedule.`, "error");
+
+                // Check for upcoming Event Reservation
+                const eventRes = resDataCache.find(r => r.type === 'event' && (r.anchorTable == tableId || (r.linkedTables && r.linkedTables.includes(tableId))));
+                if (eventRes) {
+                    if (!await customConfirm(`WARNING: Table ${tableId} is reserved for an EVENT (${eventRes.title}).\n\nContinue league scheduling?`, "EVENT CONFLICT", "!")) return;
+                }
 
                 // TIME LOGIC
                 let timeLabel = "7:30 PM";
@@ -2432,11 +2531,12 @@
                     tableId: tableId,
                     team1: t1Name,
                     team2: t2Name,
-                    fee1: fee,  // Team 1's individual fee
-                    fee2: fee,  // Team 2's individual fee
-                    fee: fee,   // Kept for backwards compatibility
+                    fee1: fee,
+                    fee2: fee,
+                    fee: fee,
                     timeLabel: timeLabel,
-                    division: leagueName
+                    leagueKey: leagueKey,
+                    leagueName: leagueName || "League Match"
                 });
 
                 saveData();
@@ -2448,6 +2548,12 @@
                 // --- INSTANT ASSIGN MODE ---
                 if (tableData[tableId].players.length > 0) return showToast(`Table ${tableId} is currently busy.`, "error");
                 if (tableData[tableId].isHold) return showToast(`Table ${tableId} is ON HOLD.`, "error");
+
+                // Check for upcoming Event Reservation
+                const eventResNow = resDataCache.find(r => r.type === 'event' && (r.anchorTable == tableId || (r.linkedTables && r.linkedTables.includes(tableId))));
+                if (eventResNow) {
+                    if (!await customConfirm(`WARNING: Table ${tableId} has an upcoming EVENT reservation (${eventResNow.title}).\n\nActivate league match anyway?`, "EVENT CONFLICT", "!")) return;
+                }
 
                 // Find team objects to get unpaid dues
                 const teams = LEAGUES[leagueKey].teams;
@@ -2471,10 +2577,11 @@
                     rateType: 'league',
                     leagueFee: t1TotalFee,
                     isPaid: false,
-                    division: leagueName,
+                    division: leagueName || "League Match",
                     unpaidDues: t1UnpaidDues,
                     unpaidNote: t1Note,
-                    leagueName: leagueName
+                    leagueKey: leagueKey,
+                    leagueName: leagueName || "League Match"
                 });
 
                 // Add team 2
@@ -2485,10 +2592,11 @@
                     rateType: 'league',
                     leagueFee: t2TotalFee,
                     isPaid: false,
-                    division: leagueName,
+                    division: leagueName || "League Match",
                     unpaidDues: t2UnpaidDues,
                     unpaidNote: t2Note,
-                    leagueName: leagueName
+                    leagueKey: leagueKey,
+                    leagueName: leagueName || "League Match"
                 });
 
                 updateTableCard(tableId);
@@ -2526,7 +2634,7 @@
             container.innerHTML = '';
 
             if (scheduledMatches.length === 0) {
-                container.innerHTML = '<div class="u-01706f69">No matches scheduled.</div>';
+                container.innerHTML = '<div class="text-muted text-center p-20">NO MATCHES SCHEDULED FOR TODAY.</div>';
                 return;
             }
 
@@ -2534,22 +2642,67 @@
             scheduledMatches.sort((a, b) => a.tableId - b.tableId);
 
             scheduledMatches.forEach(m => {
-                const div = document.createElement('div');
-                div.className = 'scheduled-item';
-                div.innerHTML = `
-                    <div>
-                        <div class="vegas-gold vegas-bold">TABLE ${m.tableId} <span class="u-085a5878">(${m.timeLabel})</span></div>
-                        <div class="u-85c1f3a3">${m.team1} vs ${m.team2}</div>
+                const card = document.createElement('div');
+                card.className = 'dashboard-match-card';
+                
+                const team1Arrived = m.team1Arrived || false;
+                const team2Arrived = m.team2Arrived || false;
+                
+                // Attempt to recover leagueName from global LEAGUES if missing or generic
+                let displayName = m.leagueName || "League Match";
+                if ((displayName === "League Match" || !displayName) && m.leagueKey && LEAGUES[m.leagueKey]) {
+                    displayName = LEAGUES[m.leagueKey].name;
+                }
+
+                card.innerHTML = `
+                    <div class="match-header">
+                        <div class="match-division">${displayName}</div>
+                        <div class="match-time">TABLE ${m.tableId} • ${m.timeLabel}</div>
                     </div>
-                    <div class="u-e4f44fd3">
-                        <button class="btn-activate u-24fc4dec" onclick="openEditMatchModal(${m.id})">EDIT</button>
-                        <button class="btn-activate" onclick="activateMatch(${m.id})">ACTIVATE</button>
-                        <button class="btn-del-sched" onclick="deleteSchedule(${m.id})">🗑️</button>
+                    
+                    <div class="match-teams">
+                        <div class="team-checkin-box ${team1Arrived ? 'checked-in' : ''}">
+                            <span class="team-name-display">${m.team1}</span>
+                            <button class="btn-checkin ${team1Arrived ? 'arrived' : ''}" 
+                                onclick="${team1Arrived ? '' : `markTeamArrived(${m.id}, 1)`}">
+                                ${team1Arrived ? '✓ ARRIVED' : 'CHECK IN'}
+                            </button>
+                        </div>
+                        
+                        <div class="vs-badge">VS</div>
+                        
+                        <div class="team-checkin-box ${team2Arrived ? 'checked-in' : ''}">
+                            <span class="team-name-display">${m.team2}</span>
+                            <button class="btn-checkin ${team2Arrived ? 'arrived' : ''}" 
+                                onclick="${team2Arrived ? '' : `markTeamArrived(${m.id}, 2)`}">
+                                ${team2Arrived ? '✓ ARRIVED' : 'CHECK IN'}
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="match-footer" style="margin-top: 20px; display: flex; flex-direction: row; gap: 10px; border-top: 1px solid #333; padding-top: 15px;">
+                        <button class="btn-checkin" style="background:var(--neon-green); color:black; flex: 2; font-weight: bold;" onclick="activateMatch(${m.id})">ACTIVATE MATCH</button>
+                        <button class="btn-checkin" style="background:#333; color:white; flex: 1; font-size: 0.8rem;" onclick="openEditMatchModal(${m.id})">EDIT MATCH</button>
+                        <button class="delete-match-btn" style="padding: 0 5px;" onclick="deleteSchedule(${m.id})">🗑️</button>
                     </div>
                 `;
-                container.appendChild(div);
+                container.appendChild(card);
             });
         }
+
+        function markTeamArrived(matchId, teamNum) {
+            const match = scheduledMatches.find(m => m.id === matchId);
+            if (!match) return;
+            
+            if (teamNum === 1) match.team1Arrived = true;
+            else match.team2Arrived = true;
+            
+            saveData();
+            renderScheduledMatches();
+            showToast(`${teamNum === 1 ? match.team1 : match.team2} marked as ARRIVED`, "success");
+        }
+
+
 
         let currentEditingMatchId = null;
 
@@ -2665,13 +2818,14 @@
                 // Move existing players to Float (Table 0)
                 tableData[0].players.push(...players);
                 tableData[tId].players = []; // Clear table
+                tableData[tId].hasBarTab = false;
                 updateTableCard(0); // Update float card
                 showToast(`${busyName} moved to Float Table.`, "warn");
             }
 
             // 2. ASSIGN LEAGUE PLAYERS — each team uses their own fee and pre-paid status
             const t1Fee = (match.fee1 !== undefined) ? match.fee1 : match.fee;
-            const t2Fee = (match.fee2 !== undefined) ? match.team2 : match.fee;
+            const t2Fee = (match.fee2 !== undefined) ? match.fee2 : match.fee;
             tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team1, startTime: new Date(), rateType: 'league', leagueFee: t1Fee, isPaid: match.paid1 || false });
             tableData[tId].players.push({ id: Date.now() + Math.random(), name: match.team2, startTime: new Date(), rateType: 'league', leagueFee: t2Fee, isPaid: match.paid2 || false });
 
@@ -2774,7 +2928,17 @@
         }
         function closeAdjustments() { document.getElementById('adjustmentPanel').classList.remove('open'); }
         function toggleBarTab() { if (currentOpenTableId === null) return; const isChecked = document.getElementById('barTabToggle').checked; tableData[currentOpenTableId].hasBarTab = isChecked; updateTableCard(currentOpenTableId); saveData(); }
-        function toggleHold() { if (currentOpenTableId === null || currentOpenTableId === 0) return; const table = tableData[currentOpenTableId]; table.isHold = !table.isHold; updateTableCard(currentOpenTableId); renderPanel(); saveData(); }
+        function toggleHold() { 
+            if (currentOpenTableId === null || currentOpenTableId === 0) return; 
+            const table = tableData[currentOpenTableId]; 
+            table.isHold = !table.isHold; 
+            if (!table.isHold && table.players.length === 0) {
+                table.hasBarTab = false;
+            }
+            updateTableCard(currentOpenTableId); 
+            renderPanel(); 
+            saveData(); 
+        }
 
         function getStats() {
             let ledgerSum = transactionLog.reduce((sum, txn) => sum + parseFloat(txn.amount), 0);
@@ -2887,6 +3051,7 @@
             if (player.rateType === 'league') {
                 tableData[targetTableId].players.push(...originPlayers);
                 tableData[currentOpenTableId].players = [];
+                tableData[currentOpenTableId].hasBarTab = false;
             }
             else if (player.rateType === 'event_anchor') {
                 const satellites = player.linkedTables || [];
@@ -2913,6 +3078,7 @@
 
             // If original table is now empty, close the panel; otherwise refresh the list
             if (tableData[currentOpenTableId].players.length === 0) {
+                tableData[currentOpenTableId].hasBarTab = false;
                 closePanel();
             } else {
                 renderPanel();
@@ -3048,6 +3214,7 @@
                     }
                     player.linkedTables.forEach(satId => {
                         tableData[satId].players = [];
+                        tableData[satId].hasBarTab = false;
                         updateTableCard(satId);
                     });
                 }
@@ -3094,6 +3261,9 @@
             }
 
             tableData[currentOpenTableId].players = tableData[currentOpenTableId].players.filter(p => p.id !== playerId);
+            if (tableData[currentOpenTableId].players.length === 0) {
+                tableData[currentOpenTableId].hasBarTab = false;
+            }
             saveData();
             renderPanel();
             updateTableCard(currentOpenTableId);
@@ -3139,11 +3309,15 @@
             const activeCap = isNightPeriod ? nightCap : dayCap;
 
             if (player.rateType === 'league' || player.rateType === 'league_practice') {
-                amount = (player.leagueFee !== null && player.leagueFee !== undefined) ? player.leagueFee : 25.00;
+                const rawFee = (player.leagueFee !== null && player.leagueFee !== undefined) ? player.leagueFee : 25.00;
+                amount = parseFloat(rawFee);
+                if (isNaN(amount)) amount = 25.00;
                 timeStr = durationLabel;
             }
             else if (player.rateType === 'event_anchor') {
-                amount = player.leagueFee || 0.00;
+                const rawFee = player.leagueFee || 0.00;
+                amount = parseFloat(rawFee);
+                if (isNaN(amount)) amount = 0.00;
                 timeStr = durationLabel;
             }
             else if (player.rateType === 'senior') {
@@ -3214,15 +3388,17 @@
 
             if (data.isHold) {
                 card.classList.add("status-hold");
-                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div><div class="player-count">HOLD</div>${badgeHtml}`;
+                if (data.hasBarTab) card.classList.add("bar-tab-active");
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="player-count">HOLD</div>${badgeHtml}`;
                 return;
             }
 
             // 3. EMPTY STATE
             if (players.length === 0) {
                 card.classList.add("status-clear");
+                if (data.hasBarTab) card.classList.add("bar-tab-active");
                 if (tableId === 0) card.style.display = 'none';
-                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId === 0 ? 'FLOAT' : tableId}</div></div><div class="player-count">0</div>${badgeHtml}`;
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId === 0 ? 'FLOAT' : tableId}</div><div class="bar-tab-icon">🍸</div></div><div class="player-count">0</div>${badgeHtml}`;
             }
             // 4. ACTIVE STATE
             else {
@@ -3255,7 +3431,7 @@
                 // OR if it is a single league_practice player, show the team name
                 // OR if it is an event, show the event title
                 const isMatch = (players.length === 2 && players.every(p => p.rateType === 'league'));
-                const isPractice = (players.length === 1 && players[0].rateType === 'league_practice');
+                const isSingleLeague = (players.length === 1 && (players[0].rateType === 'league' || players[0].rateType === 'league_practice'));
                 const isEvent = players.some(p => p.rateType === 'event_anchor' || p.rateType === 'event_satellite');
 
                 let centerHtml = `<div class="player-count">${players.length}</div>`;
@@ -3266,9 +3442,10 @@
                         <div class="league-vs">vs</div>
                         <div class="league-team-name">${players[1].name}</div>
                     </div>`;
-                } else if (isPractice) {
+                } else if (isSingleLeague) {
+                    const label = "LEAGUE";
                     centerHtml = `<div class="league-content-area">
-                        <div class="league-label-top">PRACTICE</div>
+                        <div class="league-label-top">${label}</div>
                         <div class="league-team-name">${players[0].name}</div>
                     </div>`;
                 } else if (isEvent) {
@@ -3282,8 +3459,9 @@
                     </div>`;
                 }
 
+                if (data.hasBarTab) card.classList.add("bar-tab-active");
                 // RENDER CARD
-                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div></div>${centerHtml}<div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>${badgeHtml}`;
+                card.innerHTML = `<div class="card-header-row"><div class="table-id">${tableId}</div><div class="bar-tab-icon">🍸</div></div>${centerHtml}<div class="time-display">${players[0].startTime.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</div>${badgeHtml}`;
             }
         }
 
@@ -3563,7 +3741,10 @@
         function toggleEventTable(targetId) {
             const anchorId = currentOpenTableId; const anchorP = tableData[anchorId].players[0];
             if (anchorP.linkedTables.includes(targetId)) {
-                anchorP.linkedTables = anchorP.linkedTables.filter(id => id !== targetId); tableData[targetId].players = []; updateTableCard(targetId);
+                anchorP.linkedTables = anchorP.linkedTables.filter(id => id !== targetId); 
+                tableData[targetId].players = []; 
+                tableData[targetId].hasBarTab = false;
+                updateTableCard(targetId);
             } else {
                 if (tableData[targetId].players.length > 0) return showToast(`Table ${targetId} is busy!`, "error");
                 anchorP.linkedTables.push(targetId); tableData[targetId].players.push({ id: Date.now() + Math.random(), name: anchorP.name, startTime: new Date(), rateType: 'event_satellite', isPaid: false, anchorId: anchorId }); updateTableCard(targetId);
@@ -3587,7 +3768,44 @@
             }
         }
         function toggleMiscTable(tId) { if (miscEventConfig.tables.includes(tId)) { miscEventConfig.tables = miscEventConfig.tables.filter(id => id !== tId); } else { miscEventConfig.tables.push(tId); } renderMiscTableGrid(); }
-        function renderMiscTableGrid() { const grid = document.getElementById('miscTableGrid'); grid.innerHTML = ''; for (let i = 1; i <= TOTAL_TABLES; i++) { const btn = document.createElement('button'); btn.className = 'btn-table-select'; btn.innerText = i; if (tableData[i].players.length > 0 || tableData[i].isHold) { btn.disabled = true; btn.style.borderColor = '#444'; btn.style.color = '#555'; } if (miscEventConfig.tables.includes(i)) { btn.classList.add('selected'); } btn.onclick = () => toggleMiscTable(i); grid.appendChild(btn); } }
+        function renderMiscTableGrid() {
+            const grid = document.getElementById('miscTableGrid');
+            grid.innerHTML = '';
+            for (let i = 1; i <= TOTAL_TABLES; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'btn-table-select';
+                btn.innerText = i;
+                
+                // Priority Check: Active Players
+                const isBusy = tableData[i].players.length > 0 || tableData[i].isHold;
+                // Conflict Check: Scheduled League Match
+                const scheduledMatch = scheduledMatches.find(sm => sm.tableId == i);
+                
+                if (isBusy) {
+                    btn.disabled = true;
+                    btn.style.borderColor = '#444';
+                    btn.style.color = '#555';
+                    btn.title = "TABLE CURRENTLY BUSY";
+                } else if (scheduledMatch) {
+                    btn.style.borderColor = 'var(--vegas-gold)';
+                    btn.style.color = 'var(--vegas-gold)';
+                    btn.title = `RESERVED FOR LEAGUE: ${scheduledMatch.team1} vs ${scheduledMatch.team2}`;
+                    // Don't disable here yet, just warn or allow with confirmation
+                }
+
+                if (miscEventConfig.tables.includes(i)) {
+                    btn.classList.add('selected');
+                }
+                
+                btn.onclick = async () => {
+                    if (!isBusy && scheduledMatch) {
+                        if (!await customConfirm(`Table ${i} has a scheduled LEAGUE MATCH.\n\nAre you sure you want to assign an Event here?`, "LEAGUE CONFLICT", "!")) return;
+                    }
+                    toggleMiscTable(i);
+                };
+                grid.appendChild(btn);
+            }
+        }
         async function submitMiscEvent() {
             const sel = document.getElementById('miscEventSelect');
             let eventName = sel.value;
@@ -4331,7 +4549,7 @@
             <select id="editMatchTeam1" class="league-select" title="Edit Team 1"></select>
             <div class="text-muted mb-5" style="margin-top:8px;">Team 1 League Fee ($)</div>
             <input type="number" id="editMatchFee1" class="league-select" min="0" step="0.01" placeholder="e.g. 25.00"
-                title="Team 1 League Fee" style="margin-bottom:6px;">
+                title="Team 1 League Fee" style="margin-bottom:6px; opacity:0.5; cursor:not-allowed;" disabled>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
                 <input type="checkbox" id="editMatchPaid1"
                     style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">
@@ -4343,7 +4561,7 @@
             <select id="editMatchTeam2" class="league-select" title="Edit Team 2"></select>
             <div class="text-muted mb-5" style="margin-top:8px;">Team 2 League Fee ($)</div>
             <input type="number" id="editMatchFee2" class="league-select" min="0" step="0.01" placeholder="e.g. 25.00"
-                title="Team 2 League Fee" style="margin-bottom:6px;">
+                title="Team 2 League Fee" style="margin-bottom:6px; opacity:0.5; cursor:not-allowed;" disabled>
             <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px;">
                 <input type="checkbox" id="editMatchPaid2"
                     style="width:16px; height:16px; accent-color:#00e676; cursor:pointer;">

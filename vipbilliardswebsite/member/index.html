@@ -139,8 +139,8 @@
                     </div>
                     <div class="settings-field js-hidden" id="billingSection">
                         <label class="settings-label">Billing & Subscription</label>
-                        <a href="https://billing.stripe.com/p/login/14A3cn0WMcWQfV44uAf7i00" target="_blank" rel="noopener"
-                            class="btn-onboarding-secondary btn-full-width btn-billing-stripe">
+                        <a href="https://billing.stripe.com/p/login/14A3cn0WMcWQfV44uAf7i00" target="_blank"
+                            rel="noopener" class="btn-onboarding-secondary btn-full-width btn-billing-stripe">
                             💳 MANAGE BILLING ON STRIPE
                         </a>
                         <div class="settings-help-text">
@@ -202,6 +202,16 @@
                     <div class="reserve-headline">READY TO PLAY?</div>
                     <div class="reserve-sub" id="reserveSub">Book your table at VIP Billiards.</div>
                     <div id="reserveContent"></div>
+                </div>
+
+
+
+                <!-- RESERVATION CARD -->
+                <div class="section-card js-hidden" id="reservationCard">
+                    <div class="card-label">Your Reservation</div>
+                    <div id="reservationContent">
+                        <div class="no-res">No upcoming reservations.</div>
+                    </div>
                 </div>
 
                 <!-- POINTS CARD -->
@@ -280,23 +290,6 @@
                     </div>
 
                     <div class="crowd-updated" id="lastUpdate">Connecting...</div>
-                </div>
-
-                <div id="sameDayContainer" class="same-day-container">
-                    <button id="btnSameDayArrival" class="btn-sameday" onclick="window.openSameDayModal()">
-                        I'M HEADING THERE NOW!
-                    </button>
-                    <div id="sameDayStatus" class="same-day-status">
-                        Adding you to the queue...
-                    </div>
-                </div>
-
-                <!-- RESERVATION CARD -->
-                <div class="section-card js-hidden" id="reservationCard">
-                    <div class="card-label">Your Reservation</div>
-                    <div id="reservationContent">
-                        <div class="no-res">No upcoming reservations.</div>
-                    </div>
                 </div>
 
                 <!-- HISTORY CARD -->
@@ -474,7 +467,7 @@
 
                 const member = memberSnap.data();
                 // Unified VIP Model: Everyone gets PRO features
-                const isPro = true; 
+                const isPro = true;
                 window.isProMember = true;
 
                 currentMemberRef = memberRef;
@@ -631,7 +624,7 @@
 
                 console.log(`[Res] ${activeRes.length} active/future reservations.`);
 
-                renderSDASection(member, activeRes);
+                renderReserveCard(member, activeRes);
                 // ------------------------------------------------------------------------
 
                 if (activeRes.length === 0) {
@@ -872,122 +865,64 @@
             }
         }
 
-        // ── SAME DAY ARRIVAL SECTION ──
-        function renderSDASection(member, activeRes) {
-            const container = document.getElementById('sameDayContainer');
-            if (!container) return;
 
-            // Unified VIP Model
-            const isPro = true;
-            const isSDAEnabled = true;
-            const currentMonth = new Date().toISOString().substring(0, 7);
-            const hasReachedLimit = false; 
-            const hasActiveSameDay = activeRes.some(r => r.isSameDay === true && r.status === 'PENDING');
-
-            if (hasActiveSameDay) {
-                container.innerHTML = `
-                    <button class="btn-sameday sda-active-queue-btn" disabled>
-                        ✓ YOU ARE IN THE QUEUE
-                    </button>
-                    <div class="same-day-status" style="display: block">
-                        See you soon! Speak to the front desk when you arrive.
-                    </div>`;
-            } else if (!isSDAEnabled) {
-                // Free members: Show the VIP priority nudge instead of the button
-                container.innerHTML = `
-                <div class="res-limit-box sda-limit" style="margin-top: 5px;">
-                    <div class="limit-icon">⚡</div>
-                    <div class="limit-msg">
-                        <strong>Same Day Arrival</strong> is a priority feature for VIP members.
-                    </div>
-                    <div class="limit-upgrade-nudge">
-                        Let us know when you're on the way to secure your spot. Become a VIP today for priority queueing and favorite table memory.
-                    </div>
-                    <button class="btn-upgrade-simple" onclick="window.location.href='join.html#tiers'">
-                        BECOME A VIP TODAY
-                    </button>
-                </div>`;
-            } else {
-                // VIP members: Show the button
-                container.innerHTML = `
-                <button id="btnSameDayArrival" class="btn-sameday" onclick="window.openSameDayModal()">
-                    I'M HEADING THERE NOW!
-                </button>
-                <div id="sameDayStatus" class="same-day-status" style="display: none;">
-                    Adding you to the queue...
-                </div>`;
-            }
-        }
 
         // ── RESERVE CARD ──
-        function renderReserveCard(member) {
+        function renderReserveCard(member, activeRes = []) {
             const container = document.getElementById('reserveContent');
             const sub = document.getElementById('reserveSub');
-            // Unified VIP Model
-            const isPro = true;
-            const hasReachedLimit = false;
+            if (!container) return;
 
-            if (isPro) {
-                sub.textContent = 'Book your table up to 7 days in advance — anytime, unlimited.';
-                container.innerHTML = `
-                    <button class="btn-reserve-pro" id="btnOpenReservation">
-                        🎱 Reserve My Table
+            // Updated Unified VIP Model: Everyone is PRO for now
+            const isPro = true; 
+            const hasActiveSameDay = activeRes.some(r => r.isSameDay === true && r.status === 'PENDING');
+
+            sub.textContent = 'Choose your booking method below.';
+
+            let html = `<div class="booking-options-grid">`;
+
+            // Same Day Arrival Option
+            if (hasActiveSameDay) {
+                html += `
+                <div class="booking-option-card">
+                    <div class="booking-option-label" style="color: var(--neon-green);">⚡ SECURED YOUR SPOT</div>
+                    <div class="booking-option-desc">You're already in our arrivals queue for today. Speak to the front desk when you arrive!</div>
+                    <button class="btn-sameday sda-active-queue-btn" disabled style="background: linear-gradient(135deg, #131720, #1b2029); border-color: #333; color: var(--text-muted); box-shadow: none;">
+                        ✓ YOU ARE IN THE QUEUE
                     </button>
-                    <div class="btn-reserve-note">Up to 7-days out · Unlimited reservations</div>`;
-
-                document.getElementById('btnOpenReservation')
-                    .addEventListener('click', () => openResModal(true));
-            } else if (hasReachedLimit) {
-                // Calculate days until the 1st of the next month
-                const now = new Date();
-                const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
-                const diffTime = nextMonth - now;
-                const daysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                const dayText = daysLeft === 1 ? "1 day" : `${daysLeft} days`;
-
-                sub.textContent = 'Monthly reservation limit reached.';
-                container.innerHTML = `
-                    <div class="res-limit-box">
-                        <div class="limit-icon">🔒</div>
-                        <div class="limit-msg">
-                            You have <strong>${dayText}</strong> before your next free reservation credit.
-                        </div>
-                        <div class="limit-upgrade-nudge">
-                            Become a VIP today for <strong>unlimited</strong> reservations and priority booking.
-                        </div>
-                        <button class="btn-upgrade-simple" onclick="window.location.href='join.html#tiers'">
-                            BECOME A VIP TODAY
-                        </button>
-                    </div>`;
+                </div>`;
             } else {
-                sub.textContent = MEMBERSHIP_MODE === 'freeVIP'
-                    ? 'Book your table up to 7 days in advance.'
-                    : 'Book your table today. Become a VIP for priority 7-day booking.';
-                container.innerHTML = MEMBERSHIP_MODE === 'freeVIP' ? `
-                    <button class="btn-reserve-pro" id="btnOpenReservation">
-                        🎱 Reserve My Table
+                html += `
+                <div class="booking-option-card">
+                    <div class="booking-option-label">⚡ HEADING THERE NOW?</div>
+                    <div class="booking-option-desc">Perfect for a spur-of-the-moment visit. Let us know you're heading here now to secure your spot in the queue.</div>
+                    <button id="btnSameDayArrival" class="btn-sameday" onclick="window.openSameDayModal()">
+                        I'M HEADING THERE NOW!
                     </button>
-                    <div class="btn-reserve-note">7-day booking window · Unlimited reservations</div>` : `
-                    <div class="tier-compare">
-                        <div class="tier-compare-box current-free">
-                            <div class="tier-compare-name">You</div>
-                            <div class="tier-compare-rule">1 DAY OUT</div>
-                            <div class="tier-compare-detail">1 reservation<br>per month</div>
-                        </div>
-                        <div class="tier-compare-box upgrade-pro">
-                            <div class="tier-compare-badge">VIP Member</div>
-                            <div class="tier-compare-name">VIP Member</div>
-                            <div class="tier-compare-rule">7 DAYS OUT</div>
-                            <div class="tier-compare-detail">Unlimited<br>reservations</div>
-                        </div>
-                    </div>
-                    <button class="btn-reserve-free" id="btnOpenReservation">
-                        Book a Table
-                    </button>
-                    <div class="btn-reserve-note">Same-day / next-day booking only</div>`;
+                </div>`;
+            }
 
-                document.getElementById('btnOpenReservation')
-                    .addEventListener('click', () => openResModal(false));
+            html += `<div class="booking-divider">OR</div>`;
+
+            // Scheduled Reservation Option
+            html += `
+            <div class="booking-option-card">
+                <div class="booking-option-label">📅 PLANNING AHEAD?</div>
+                <div class="booking-option-desc">Book your table for later today or up to 7 days out. Best for groups or ensuring you play at a specific time.</div>
+                <button class="btn-reserve-pro" id="btnOpenReservation">
+                    🎱 SCHEDULE RESERVATION
+                </button>
+                <div class="btn-reserve-note">7-day advance booking window</div>
+            </div>`;
+
+            html += `</div>`;
+            
+            container.innerHTML = html;
+
+            // Re-attach event listeners
+            const btnOpenRes = document.getElementById('btnOpenReservation');
+            if (btnOpenRes) {
+                btnOpenRes.addEventListener('click', () => openResModal(isPro));
             }
         }
 

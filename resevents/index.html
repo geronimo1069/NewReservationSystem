@@ -13,7 +13,7 @@
 
     <!-- Custom Theme -->
     <link rel="stylesheet" href="./src/ui/main.css">
-    
+
     <!-- PWA / Mobile App Config -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#0f111a">
@@ -147,12 +147,14 @@
                     <div id="col-events" class="admin-col">
                         <h3>
                             Event Manager
-                            <button id="btn-show-event-form" class="btn-action" onclick="window.toggleEventForm()">+ Create Event</button>
+                            <button id="btn-show-event-form" class="btn-action" onclick="window.toggleEventForm()">+
+                                Create Event</button>
                         </h3>
-                        
+
                         <!-- NEW EVENT FORM -->
                         <div id="event-creation-panel" class="event-form">
-                            <input type="text" id="ev-title" class="input-cyber" placeholder="Event Title (e.g. APA Tournament)">
+                            <input type="text" id="ev-title" class="input-cyber"
+                                placeholder="Event Title (e.g. APA Tournament)">
                             <div class="form-row">
                                 <input type="date" id="ev-date" class="input-cyber" placeholder="Select event date">
                                 <div class="time-inputs">
@@ -160,8 +162,10 @@
                                     <input type="time" id="ev-end" class="input-cyber" title="End Time">
                                 </div>
                             </div>
-                            <textarea id="ev-internal" class="input-cyber" placeholder="Internal Notes (Staff only)"></textarea>
-                            <textarea id="ev-public" class="input-cyber" placeholder="Public Description (Shows on website)"></textarea>
+                            <textarea id="ev-internal" class="input-cyber"
+                                placeholder="Internal Notes (Staff only)"></textarea>
+                            <textarea id="ev-public" class="input-cyber"
+                                placeholder="Public Description (Shows on website)"></textarea>
                             <div class="form-row flex-center">
                                 <div class="switch-group">
                                     <input type="checkbox" id="ev-is-public" checked>
@@ -182,7 +186,7 @@
                     <button id="btn-details-back" class="btn-mobile-back" onclick="closeDetails()">
                         <i class="fas fa-arrow-left"></i> BACK TO LIST
                     </button>
-                    
+
                     <div id="details-view-content" class="details-empty">
                         <p>SELECT A RECORD TO VIEW INTEL</p>
                     </div>
@@ -201,81 +205,85 @@
                 </button>
             </nav>
         </div>
+    </div>
+
+
+
+
+
+    <!-- ACTION PANEL (Fixed Overlay for Mobile) -->
+    <div id="action-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="action-modal-title">EDIT OPTIONS</h3>
+            <div class="action-grid">
+                <button onclick="window.confirmStatusUpdate('ARRIVED')" class="btn-action-large status-arrived">MARK
+                    ARRIVED</button>
+                <button onclick="window.confirmStatusUpdate('NO-SHOW')" class="btn-action-large status-noshow">MARK
+                    NO-SHOW</button>
+                <button onclick="window.confirmStatusUpdate('CANCELLED')" class="btn-action-large status-cancelled">MARK
+                    CANCELLED</button>
+                <button id="btn-open-edit" class="btn-action-large status-pending">MANUAL EDIT</button>
+            </div>
+            <button id="btn-close-action" class="btn-cancel-modal">ABORT</button>
         </div>
+    </div>
 
+    <!-- EDIT PANEL (Fixed Overlay) -->
+    <div id="edit-modal" class="modal">
+        <div class="modal-content modal-large">
+            <h3 id="edit-panel-title">Update Details</h3>
+            <div id="edit-fields-res">
+                <label for="edit-date">Change Date</label>
+                <input type="date" id="edit-date">
+                <label for="edit-time">Change Time</label>
+                <input type="time" id="edit-time">
+            </div>
+            <div id="edit-fields-ev" class="hidden">
+                <label for="edit-ev-title">Event Title</label>
+                <input type="text" id="edit-ev-title" class="input-cyber">
 
-
-
-
-        <!-- ACTION PANEL (Fixed Overlay for Mobile) -->
-        <div id="action-modal" class="modal">
-            <div class="modal-content">
-                <h3 id="action-modal-title">EDIT OPTIONS</h3>
-                <div class="action-grid">
-                    <button onclick="window.confirmStatusUpdate('ARRIVED')" class="btn-action-large status-arrived">MARK ARRIVED</button>
-                    <button onclick="window.confirmStatusUpdate('NO-SHOW')" class="btn-action-large status-noshow">MARK NO-SHOW</button>
-                    <button onclick="window.confirmStatusUpdate('CANCELLED')" class="btn-action-large status-cancelled">MARK CANCELLED</button>
-                    <button id="btn-open-edit" class="btn-action-large status-pending">MANUAL EDIT</button>
+                <div class="edit-grid-half">
+                    <div>
+                        <label for="edit-ev-date">Date</label>
+                        <input type="date" id="edit-ev-date" class="input-cyber">
+                    </div>
+                    <div>
+                        <label for="edit-ev-public">Visibility</label>
+                        <select id="edit-ev-public" class="input-cyber">
+                            <option value="true">Public (On Site)</option>
+                            <option value="false">Staff Only</option>
+                        </select>
+                    </div>
                 </div>
-                <button id="btn-close-action" class="btn-cancel-modal">ABORT</button>
+
+                <div class="edit-grid-half">
+                    <div>
+                        <label for="edit-ev-start">Start Time</label>
+                        <input type="time" id="edit-ev-start" class="input-cyber">
+                    </div>
+                    <div>
+                        <label for="edit-ev-end">End Time</label>
+                        <input type="time" id="edit-ev-end" class="input-cyber">
+                    </div>
+                </div>
+
+                <label for="edit-ev-internal">Internal Notes</label>
+                <textarea id="edit-ev-internal" class="input-cyber" placeholder="Staff only notes..."></textarea>
+
+                <label for="edit-ev-public-notes">Public Description</label>
+                <textarea id="edit-ev-public-notes" class="input-cyber"
+                    placeholder="Description for website..."></textarea>
+            </div>
+
+            <div class="details-actions details-stack-fix">
+                <button id="btn-save-edit" class="btn-cyber">APPLY CHANGES</button>
+                <button id="btn-delete-record" class="btn-action btn-delete">DELETE PERMANENTLY</button>
+                <button id="btn-close-modal" class="btn-cancel-modal">ABORT</button>
             </div>
         </div>
+    </div>
 
-        <!-- EDIT PANEL (Fixed Overlay) -->
-        <div id="edit-modal" class="modal">
-            <div class="modal-content modal-large">
-                <h3 id="edit-panel-title">Update Details</h3>
-                <div id="edit-fields-res">
-                    <label for="edit-date">Change Date</label>
-                    <input type="date" id="edit-date">
-                    <label for="edit-time">Change Time</label>
-                    <input type="time" id="edit-time">
-                </div>
-                <div id="edit-fields-ev" class="hidden">
-                    <label for="edit-ev-title">Event Title</label>
-                    <input type="text" id="edit-ev-title" class="input-cyber">
-                    
-                    <div class="edit-grid-half">
-                        <div>
-                            <label for="edit-ev-date">Date</label>
-                            <input type="date" id="edit-ev-date" class="input-cyber">
-                        </div>
-                        <div>
-                            <label for="edit-ev-public">Visibility</label>
-                            <select id="edit-ev-public" class="input-cyber">
-                                <option value="true">Public (On Site)</option>
-                                <option value="false">Staff Only</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="edit-grid-half">
-                        <div>
-                            <label for="edit-ev-start">Start Time</label>
-                            <input type="time" id="edit-ev-start" class="input-cyber">
-                        </div>
-                        <div>
-                            <label for="edit-ev-end">End Time</label>
-                            <input type="time" id="edit-ev-end" class="input-cyber">
-                        </div>
-                    </div>
-
-                    <label for="edit-ev-internal">Internal Notes</label>
-                    <textarea id="edit-ev-internal" class="input-cyber" placeholder="Staff only notes..."></textarea>
-                    
-                    <label for="edit-ev-public-notes">Public Description</label>
-                    <textarea id="edit-ev-public-notes" class="input-cyber" placeholder="Description for website..."></textarea>
-                </div>
-                
-                <div class="details-actions details-stack-fix">
-                    <button id="btn-save-edit" class="btn-cyber">APPLY CHANGES</button>
-                    <button id="btn-delete-record" class="btn-action btn-delete">DELETE PERMANENTLY</button>
-                    <button id="btn-close-modal" class="btn-cancel-modal">ABORT</button>
-                </div>
-            </div>
-        </div>
-
-        <button id="btn-logout" class="btn-logout">End Session</button>
+    <button id="btn-logout" class="btn-logout">End Session</button>
     </div>
 
     <!-- Initialization and Logic -->
@@ -306,7 +314,7 @@
         const resList = document.getElementById('res-list');
         const eventList = document.getElementById('event-list');
         const eventCreationPanel = document.getElementById('event-creation-panel');
-        
+
         const dateGrid = document.getElementById('date-grid');
         const userNameEl = document.getElementById('user-name');
         const userTierEl = document.getElementById('user-tier');
@@ -388,17 +396,17 @@
                 userEmailEl.textContent = user.email.toUpperCase();
 
                 // Unified VIP Model
-                const userTier = (profile.tier || 'PRO').toUpperCase();
+                const userTier = (profile?.tier || 'PRO').toUpperCase();
                 userTierEl.textContent = userTier === 'ADMIN' ? 'ADMIN' : 'PRO';
                 userTierEl.className = `user-tier tier-${userTier.toLowerCase()}`;
 
                 // ADMIN CHECK
                 const isAdmin = (user.email.toLowerCase() === activeEnv.adminEmail.toLowerCase()) || (userTier === 'ADMIN');
-                
+
                 if (isAdmin) {
                     document.querySelector('.container').classList.add('admin-mode');
                     adminPanel.style.display = 'block';
-                    userProfile.style.display = 'none'; 
+                    userProfile.style.display = 'none';
                     welcomeMsg.innerHTML = `OPERATOR: <span style="color:var(--gold)">ONLINE</span>`;
                     loadAdminData();
                 } else {
@@ -406,7 +414,7 @@
                     adminPanel.style.display = 'none';
                     userProfile.style.display = 'flex';
                     welcomeMsg.innerHTML = `VIP MEMBER STATUS: <span style="color:var(--gold)">ACTIVE</span>`;
-                    
+
                     // Populating Membership Card
                     document.getElementById('stat-hours').textContent = (profile.lifetimeHours || 0).toFixed(1);
                     document.getElementById('stat-points').textContent = (profile.loyaltyPoints || 0).toString().padStart(2, '0');
@@ -496,7 +504,7 @@
                 let displayTime = res.time || '--:--';
                 let displayDate = res.date || '---';
                 let isToday = false;
-                
+
                 // DERIVE DATE/TIME
                 let d = null;
                 if (res.date) {
@@ -509,13 +517,13 @@
 
                 if (d && !isNaN(d.getTime())) {
                     const today = new Date();
-                    today.setHours(0,0,0,0);
+                    today.setHours(0, 0, 0, 0);
                     const compareDate = new Date(d);
-                    compareDate.setHours(0,0,0,0);
-                    
+                    compareDate.setHours(0, 0, 0, 0);
+
                     const diffDays = Math.round((compareDate - today) / (1000 * 60 * 60 * 24));
                     isToday = (diffDays === 0);
-                    
+
                     dayIndicator = d.getDate().toString();
                     subDate = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
                 }
@@ -533,7 +541,7 @@
                     </div>
                     <div class="res-info">
                         <h4>${name}</h4>
-                        <div class="res-meta-line">${displayDate} @ ${displayTime} | ${res.peopleCount || res.partySize || '?' } GUESTS</div>
+                        <div class="res-meta-line">${displayDate} @ ${displayTime} | ${res.peopleCount || res.partySize || '?'} GUESTS</div>
                     </div>
                 `;
                 listEl.appendChild(item);
@@ -551,7 +559,7 @@
                 const item = document.createElement('div');
                 item.className = `res-item ${selectedItemId === ev.id ? 'selected' : ''}`;
                 item.onclick = () => window.selectRecord(ev.id, 'event');
-                
+
                 const d = new Date(ev.date + 'T12:00:00');
                 const dayIndicator = d.getDate().toString();
                 const subDate = d.toLocaleDateString('en-US', { month: 'short' }).toUpperCase();
@@ -573,7 +581,7 @@
         window.selectRecord = (id, type) => {
             selectedItemId = id;
             updateDetailsView(type);
-            
+
             // On mobile, trigger the slide-in view
             if (window.innerWidth <= 900) {
                 document.getElementById('details-panel').classList.add('mobile-view');
@@ -595,9 +603,9 @@
                     if (data) type = 'event';
                 }
             } else {
-                data = type === 'reservation' ? 
-                       lastReservationsSnapshot.find(r => r.id === selectedItemId) :
-                       lastEventsSnapshot.find(e => e.id === selectedItemId);
+                data = type === 'reservation' ?
+                    lastReservationsSnapshot.find(r => r.id === selectedItemId) :
+                    lastEventsSnapshot.find(e => e.id === selectedItemId);
             }
 
             if (!data) {
@@ -632,13 +640,13 @@
         function renderReservationDetails(res) {
             const name = res.memberName || res.name || 'Guest User';
             const status = (res.status || 'PENDING').toUpperCase();
-            
+
             // Check if today for SDA button
             const resTime = new Date(res.reservationTime || (res.date + 'T12:00:00'));
             const today = new Date();
-            today.setHours(0,0,0,0);
+            today.setHours(0, 0, 0, 0);
             const comp = new Date(resTime);
-            comp.setHours(0,0,0,0);
+            comp.setHours(0, 0, 0, 0);
             const isToday = (comp.getTime() === today.getTime());
             const isAdmin = document.querySelector('.container').classList.contains('admin-mode');
             const showSDA = isToday && !res.isSameDay && !isAdmin && (res.status === 'PENDING');
@@ -653,7 +661,7 @@
                     <p class="res-status-label status-${status.toLowerCase()}">${status}</p>
                 </div>
                 <div class="details-info-list">
-                    <div class="info-item"><label>Date / Time</label><value>${res.date || new Date(res.reservationTime).toLocaleDateString()} @ ${res.time || new Date(res.reservationTime).toLocaleTimeString([], {hour:'numeric', minute:'2-digit'})}</value></div>
+                    <div class="info-item"><label>Date / Time</label><value>${res.date || new Date(res.reservationTime).toLocaleDateString()} @ ${res.time || new Date(res.reservationTime).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}</value></div>
                     <div class="info-item"><label>Party Size</label><value>${res.peopleCount || res.partySize || '?'} GUESTS</value></div>
                     <div class="info-item"><label>Preference</label><value>${res.tableType || 'ANY'}</value></div>
                     <div class="info-item"><label>Phone</label><value>${res.phone || 'NOT PROVIDED'}</value></div>
@@ -734,7 +742,7 @@
 
             btnSaveEvent.disabled = true;
             btnSaveEvent.textContent = 'COMMITTING...';
-            
+
             const res = await EventManager.saveEvent(data, currentEditingEventId);
             if (res.success) {
                 window.toggleEventForm();
@@ -762,7 +770,7 @@
                 evInternal.value = ev.internalNotes || '';
                 evPublic.value = ev.publicNotes || '';
                 evIsPublic.checked = ev.public !== false;
-                
+
                 eventCreationPanel.style.display = 'flex';
                 btnSaveEvent.textContent = 'UPDATE EVENT';
                 eventCreationPanel.scrollIntoView({ behavior: 'smooth' });
@@ -812,7 +820,7 @@
         window.openEditModal = (id, date, time, type = 'reservation') => {
             currentEditingId = id;
             activeResData = { id, date, time, type }; // Track type globally
-            
+
             const isRes = type === 'reservation';
             const resFields = document.getElementById('edit-fields-res');
             const evFields = document.getElementById('edit-fields-ev');
@@ -826,7 +834,7 @@
                 resFields.classList.add('hidden');
                 evFields.classList.remove('hidden');
                 document.getElementById('edit-panel-title').textContent = 'Update Event Details';
-                
+
                 const ev = lastEventsSnapshot.find(e => e.id === id);
                 document.getElementById('edit-ev-title').value = ev.title || '';
                 document.getElementById('edit-ev-date').value = ev.date || '';

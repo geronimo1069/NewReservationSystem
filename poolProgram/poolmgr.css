@@ -204,6 +204,14 @@ body {
 }
 
 .league-section {
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+}
+
+/* Maintain container for edit modals */
+.edit-match-box {
     background: #2a3040;
     padding: 20px;
     border-radius: 8px;
@@ -919,7 +927,7 @@ body {
 .side-panel {
     position: fixed;
     top: 0;
-    right: -660px;
+    right: -610px;
     width: 600px;
     height: 100vh;
     background-color: #161922;
@@ -3328,4 +3336,232 @@ input[type="checkbox"] {
     border-color: var(--neon-orange);
     color: var(--neon-orange);
     box-shadow: 0 0 20px rgba(255, 157, 0, 0.2);
-}
+}
+/* LEAGUE DASHBOARD STYLES */
+.league-dashboard-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+    height: auto;
+}
+
+.league-scheduler {
+    width: 100%;
+    background: transparent;
+    padding: 0;
+    border-radius: 0;
+    border: none;
+}
+
+.league-dashboard-main {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.dashboard-match-card {
+    background: #1e222d;
+    border-radius: 12px;
+    border: 1px solid #333;
+    margin-bottom: 15px;
+    padding: 20px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+.match-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    border-bottom: 1px solid #333;
+    padding-bottom: 10px;
+}
+
+.match-division {
+    font-size: 0.8rem;
+    color: var(--vegas-gold);
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+.match-time {
+    color: #fff;
+    font-weight: bold;
+}
+
+.match-teams {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: 15px;
+    align-items: center;
+}
+
+.team-checkin-box {
+    background: rgba(0,0,0,0.2);
+    padding: 15px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid transparent;
+}
+
+.team-checkin-box.checked-in {
+    border-color: var(--neon-green);
+    background: rgba(0, 255, 127, 0.05);
+}
+
+.team-name-display {
+    display: block;
+    color: #fff;
+    font-weight: bold;
+    font-size: 1rem;
+    margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vs-badge {
+    color: #555;
+    font-weight: bold;
+    font-style: italic;
+}
+
+.btn-checkin {
+    background: var(--neon-blue);
+    color: #000;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 0.8rem;
+    cursor: pointer;
+    width: 100%;
+}
+
+.btn-checkin.arrived {
+    background: #444;
+    color: var(--neon-green);
+    cursor: default;
+}
+
+.arrival-info {
+    font-size: 0.75rem;
+    margin-top: 5px;
+}
+
+.status-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #666;
+    margin-top: 5px;
+}
+
+.fee-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: var(--neon-green);
+    margin: 5px 0;
+}
+
+.surcharge-warning {
+    color: var(--neon-orange);
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.delete-match-btn {
+    background: transparent;
+    border: none;
+    color: #555;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 0 10px;
+}
+
+.delete-match-btn:hover {
+    color: var(--neon-red);
+}
+
+.match-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #333;
+}
+
+.table-assignment {
+    background: var(--vegas-gold);
+    color: #000;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+.team-login-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.85);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+.team-login-modal {
+    background: #1e222d;
+    border: 1px solid #444;
+    border-radius: 20px;
+    width: 600px;
+    max-width: 95vw;
+    padding: 30px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    position: relative;
+}
+.team-login-header h2 {
+    color: var(--vegas-gold);
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+.team-login-header p {
+    color: #888;
+    font-size: 0.9rem;
+}
+.team-login-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 15px;
+    max-height: 50vh;
+    overflow-y: auto;
+    padding: 10px;
+}
+.team-login-item {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+}
+.team-login-item:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: var(--vegas-gold);
+    transform: translateY(-2px);
+}
+.btn-team-login {
+    background: var(--neon-orange);
+    color: #000;
+}
+.btn-close-team {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #888;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
